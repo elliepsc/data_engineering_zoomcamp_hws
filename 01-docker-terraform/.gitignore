@@ -70,3 +70,8 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+
+# To ignore temporary
+MANIFEST.md
+README_PRINCIPAL.md
+SETUP.md

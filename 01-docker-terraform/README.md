@@ -70,7 +70,7 @@ ORDER BY max_distance DESC
 LIMIT 1;
 ```
 
-**Answer:** `2025-11-14` *(Run query to fill in)*
+**Answer:** `2025-11-14`
 
 ![NYC Taxi Data Pipeline](docs/question4.png)
 ---
@@ -92,7 +92,7 @@ ORDER BY total_revenue DESC
 LIMIT 1;
 ```
 
-**Answer:** `East Harlem North` *(Run query to fill in)*
+**Answer:** `East Harlem North`
 
 ![NYC Taxi Data Pipeline](docs/question5.png)
 ---
@@ -117,7 +117,7 @@ ORDER BY max_tip DESC
 LIMIT 1;
 ```
 
-**Answer:** `Yorkville` *(Run query to fill in)*
+**Answer:** `Yorkville` 
 
 ![NYC Taxi Data Pipeline](docs/question6.png)
 ---

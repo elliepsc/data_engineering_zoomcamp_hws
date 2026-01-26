@@ -194,8 +194,6 @@ See [pipeline/](./pipeline/) for implementation details.
 │   ├── database.py        # Database operations
 │   └── data_loader.py     # Data loading utilities
 ├── queries/               # SQL queries for homework
-│   ├── 00_verify_data.sql
-│   └── homework_queries.sql
 ├── docs/                  # Sceenshots of SQL
 ├── notebooks/             # Data exploration
 ├── tests/                 # Comprehensive test suite

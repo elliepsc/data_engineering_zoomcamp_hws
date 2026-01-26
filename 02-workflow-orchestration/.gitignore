@@ -1,0 +1,88 @@
+
+.env
+*.env
+!.env.example  # ← Exception: .env.example est OK (pas de vrais secrets)
+
+# Fichiers credentials divers
+credentials.json
+service_account.json
+*.pem
+*.key
+
+# Bytecode Python (fichiers compilés)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual environments (si tu en utilises)
+venv/
+env/
+ENV/
+
+# 3. AIRFLOW GENERATED FILES
+
+# Airflow logs (très verbeux)
+logs/
+airflow/logs/
+
+# Airflow database SQLite locale (si pas Postgres)
+airflow.db
+airflow.cfg  # Config générée automatiquement
+
+# Airflow PIDs et lockfiles
+*.pid
+*.lock
+
+# Scheduler logs
+scheduler.log
+webserver.log
+
+# 4. DATA FILES (si tu télécharges les CSV localement)
+
+# CSV files
+*.csv
+*.parquet
+*.json  # Sauf si c'est de la config
+
+# Data directories
+data/
+raw_data/
+processed_data/
+
+# 5. IDE / EDITOR FILES
+
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# macOS
+.DS_Store
+
+# Linux
+*~
+
+# 6. TESTING / COVERAGE
+
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+
+# 7. DOCKER VOLUMES (si utilisés)
+# POURQUOI: Docker peut créer des volumes locaux avec des données
+
+postgres-db-volume/
+
+# 7. Draft & work-in-progress files
+draft/
+*_DRAFT.md
+tests/
+

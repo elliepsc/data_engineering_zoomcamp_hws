@@ -1,10 +1,11 @@
 # =============================================================================
-# Yellow Taxi ETL Pipeline
+# Yellow Taxi ETL Pipeline - CORRECTED VERSION (ChatGPT Best Practices)
 # =============================================================================
-# Pipeline: Extract → Transform → Load → Validate
-# Schedule: Daily (@daily)
-# Data Source: GitHub NYC TLC data releases
-# Target: Postgres table yellow_taxi_trips
+# CHANGES FROM ORIGINAL:
+# 1. schedule=None instead of @daily → NO automatic 2026 runs
+# 2. if_exists='append' + DELETE partition → idempotent, no data loss
+# 3. Validation targets specific partition → accurate per-month validation
+# 4. logical_date instead of execution_date → Airflow 2.x best practice
 # =============================================================================
 
 from airflow import DAG
@@ -15,7 +16,9 @@ import os
 import logging
 import pandas as pd
 import requests
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
+import gzip
+import shutil
 
 logger = logging.getLogger(__name__)
 
@@ -49,16 +52,10 @@ def extract_yellow_taxi(**context):
     """
     Download Yellow Taxi CSV from GitHub
     
-    NOTE: Files are compressed (.csv.gz) on GitHub
-    We download the .gz file and decompress it
-    
-    Returns:
-        str: Local filepath of downloaded CSV
+    CHANGED: Uses logical_date instead of execution_date (Airflow 2.x)
     """
-    import gzip
-    import shutil
-    
-    execution_date = context['execution_date']
+    # CHANGED: logical_date instead of execution_date
+    execution_date = context['logical_date']
     year = execution_date.year
     month = execution_date.month
     
@@ -77,7 +74,7 @@ def extract_yellow_taxi(**context):
     try:
         # Download .csv.gz file
         response = requests.get(url, timeout=300)
-        response.raise_for_status()
+        response.raise_for_status()  # Will raise 404 if file doesn't exist
         
         with open(local_filepath_gz, 'wb') as f:
             f.write(response.content)
@@ -95,7 +92,7 @@ def extract_yellow_taxi(**context):
         # Log file size (HOMEWORK Q1: Yellow Dec 2020)
         file_size_mb = os.path.getsize(local_filepath_csv) / (1024 * 1024)
         logger.info(f"✅ Decompression complete")
-        logger.info(f"📦 File size: {file_size_mb:.1f} MiB")
+        logger.info(f"📦 File size: {file_size_mb:.1f} MiB")  # ← Q1 ANSWER HERE
         logger.info(f"💾 Saved to: {local_filepath_csv}")
         
         # Clean up .gz file
@@ -117,12 +114,14 @@ def extract_yellow_taxi(**context):
 def transform_yellow_taxi(**context):
     """
     Transform: lowercase columns, drop nulls, add year/month partitions
-    
-    Returns:
-        pd.DataFrame: Cleaned dataframe
     """
     ti = context['ti']
     filepath = ti.xcom_pull(task_ids='extract_yellow_taxi')
+    
+    # CHANGED: logical_date instead of execution_date
+    execution_date = context['logical_date']
+    year = execution_date.year
+    month = execution_date.month
     
     logger.info(f"🔄 Transforming {filepath}")
     
@@ -143,31 +142,38 @@ def transform_yellow_taxi(**context):
     df['tpep_pickup_datetime'] = pd.to_datetime(df['tpep_pickup_datetime'])
     df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'])
     
-    # Add year/month for partitioning (needed for SQL queries)
-    df['year'] = df['tpep_pickup_datetime'].dt.year
-    df['month'] = df['tpep_pickup_datetime'].dt.month
+    # CHANGED: Use logical_date for partitioning (more reliable)
+    df['year'] = year
+    df['month'] = month
     
     logger.info(f"✅ Transform complete: {len(df)} rows")
     
     return df
 
 # =============================================================================
-# TASK 3: LOAD - Load to Postgres
+# TASK 3: LOAD - Load to Postgres with idempotent partition overwrite
 # =============================================================================
 
 def load_yellow_taxi(**context):
     """
-    Load dataframe to Postgres using pandas.to_sql()
+    Load dataframe to Postgres with idempotent partition overwrite
     
-    Idempotence: if_exists='replace' ensures re-runnable pipeline
+    CHANGED: 
+    - append instead of replace (preserves other months)
+    - DELETE partition before INSERT (idempotent, rejouable)
     """
     ti = context['ti']
     df = ti.xcom_pull(task_ids='transform_yellow_taxi')
     
+    # CHANGED: logical_date instead of execution_date
+    execution_date = context['logical_date']
+    year = execution_date.year
+    month = execution_date.month
+    
     if df is None or len(df) == 0:
         raise ValueError("❌ No data from transform task")
     
-    logger.info(f"📤 Loading {len(df)} rows to Postgres")
+    logger.info(f"📤 Loading {len(df)} rows to Postgres (year={year}, month={month})")
     
     table_name = f"{TAXI_TYPE}_taxi_trips"
     
@@ -179,21 +185,32 @@ def load_yellow_taxi(**context):
     engine = create_engine(conn_string)
     
     try:
-        df.to_sql(
-            name=table_name,
-            con=engine,
-            if_exists='replace',  # Idempotent: replace existing data
-            index=False,
-            method='multi',
-            chunksize=10000
-        )
+        with engine.begin() as conn:
+            # ADDED: Idempotent - delete only current partition before loading
+            logger.info(f"🗑️ Deleting existing data for {year}-{month:02d}")
+            result = conn.execute(
+                text("DELETE FROM yellow_taxi_trips WHERE year = :y AND month = :m"),
+                {"y": year, "m": month}
+            )
+            logger.info(f"🗑️ Deleted {result.rowcount} existing rows")
+            
+            # CHANGED: append instead of replace
+            df.to_sql(
+                name=table_name,
+                con=conn,
+                if_exists='append',  # CHANGED: Was 'replace' (lost data!)
+                index=False,
+                method='multi',
+                chunksize=10000
+            )
         
         logger.info(f"✅ Loaded {len(df)} rows to {table_name}")
         
         return {
             'table': table_name,
             'rows_loaded': len(df),
-            'execution_date': context['execution_date'].strftime('%Y-%m-%d')
+            'year': year,
+            'month': month
         }
         
     except Exception as e:
@@ -203,15 +220,18 @@ def load_yellow_taxi(**context):
         engine.dispose()
 
 # =============================================================================
-# TASK 4: VALIDATE - Check data quality
+# TASK 4: VALIDATE - Check data quality (partition-specific)
 # =============================================================================
 
+# CHANGED: Validate only current partition, not entire table
 VALIDATION_SQL = """
 SELECT 
     COUNT(*) as row_count,
     MIN(tpep_pickup_datetime) as earliest_pickup,
     MAX(tpep_pickup_datetime) as latest_pickup
-FROM yellow_taxi_trips;
+FROM yellow_taxi_trips
+WHERE year = {{ logical_date.year }}
+  AND month = {{ logical_date.month }};
 """
 
 # =============================================================================
@@ -221,8 +241,6 @@ FROM yellow_taxi_trips;
 def cleanup_yellow_taxi(**context):
     """
     Clean up temporary CSV files after successful load
-    
-    Removes CSV file from /tmp/taxi_data to save disk space
     """
     ti = context['ti']
     filepath = ti.xcom_pull(task_ids='extract_yellow_taxi')
@@ -244,41 +262,38 @@ with DAG(
     dag_id='taxi_etl_yellow',
     default_args=default_args,
     description='Yellow Taxi ETL: Extract from GitHub → Transform → Load to Postgres',
-    schedule_interval='@daily',
+    schedule=None,  # CHANGED: Was '@daily', now MANUAL TRIGGER ONLY (no 2026 runs!)
     start_date=datetime(2020, 1, 1),
-    catchup=False,  # Set to True for backfill
+    catchup=False,
+    is_paused_upon_creation=True,  # Start paused by default
     tags=['taxi', 'etl', 'yellow', 'nyc'],
-    max_active_runs=1,
+    max_active_runs=1,  # ADDED: Prevent parallel runs
 ) as dag:
     
     extract_task = PythonOperator(
         task_id='extract_yellow_taxi',
         python_callable=extract_yellow_taxi,
-        provide_context=True,
     )
     
     transform_task = PythonOperator(
         task_id='transform_yellow_taxi',
         python_callable=transform_yellow_taxi,
-        provide_context=True,
     )
     
     load_task = PythonOperator(
         task_id='load_yellow_taxi',
         python_callable=load_yellow_taxi,
-        provide_context=True,
     )
     
     validate_task = PostgresOperator(
         task_id='validate_yellow_taxi',
         postgres_conn_id='postgres_default',
-        sql=VALIDATION_SQL,
+        sql=VALIDATION_SQL,  # CHANGED: Now validates only current partition
     )
     
     cleanup_task = PythonOperator(
         task_id='cleanup_yellow_taxi',
         python_callable=cleanup_yellow_taxi,
-        provide_context=True,
     )
     
     # Pipeline: Extract → Transform → Load → Validate → Cleanup

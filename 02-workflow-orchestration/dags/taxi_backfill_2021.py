@@ -36,6 +36,7 @@ with DAG(
     start_date=datetime(2021, 1, 1),
     end_date=datetime(2021, 7, 31),
     catchup=True,  # Generates 7 runs (Jan-Jul)
+    is_paused_upon_creation=True,  # Paused by default - activate when ready
     tags=['taxi', 'backfill', '2021'],
     max_active_runs=1,
 ) as dag:

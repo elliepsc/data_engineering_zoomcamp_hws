@@ -1,0 +1,29 @@
+# dbt profiles configuration
+# Copy this file to ~/.dbt/profiles.yml
+
+taxi_rides_ny:
+  target: dev  # Use 'dev' for local DuckDB, 'prod' for BigQuery
+  
+  outputs:
+    # Local development with DuckDB
+    dev:
+      type: duckdb
+      path: taxi_rides_ny.duckdb  # Database file in project root
+      threads: 4
+      extensions:
+        - parquet  # Enable parquet reading
+    
+    # Production with BigQuery (for later)
+    prod:
+      type: bigquery
+      method: oauth
+      project: your-project-id  # Replace with actual GCP project ID
+      dataset: taxi_dbt_prod
+      threads: 4
+      timeout_seconds: 300
+      location: EU  # or US
+      priority: interactive
+
+# Usage:
+# dbt run --target dev   (uses DuckDB locally)
+# dbt run --target prod  (uses BigQuery)

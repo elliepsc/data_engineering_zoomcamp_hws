@@ -84,8 +84,11 @@ postgres-db-volume/
 # 7. Draft & work-in-progress files
 draft/
 *_DRAFT.md
+*DRAFT*
+*_backup*
 tests/
 BACKFILL_GUIDE.md
 dags/.archives/
 dags/*backup
+validation/
 

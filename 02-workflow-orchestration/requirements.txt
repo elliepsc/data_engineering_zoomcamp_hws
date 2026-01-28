@@ -1,3 +1,11 @@
+# =============================================================================
+# Requirements for Airflow Module 2 Homework + Data Validation
+# =============================================================================
+# This file combines:
+# - Airflow dependencies for the main project
+# - Jupyter notebook dependencies for data validation
+# =============================================================================
+
 # Airflow with Postgres support
 apache-airflow[postgres,celery]==2.10.0
 
@@ -5,11 +13,27 @@ apache-airflow[postgres,celery]==2.10.0
 psycopg2-binary==2.9.9
 
 # Data processing
+# IMPORTANT: Using pandas 2.2.0 (Airflow compatible) + numpy <2.0
 pandas==2.2.0
 numpy<2.0  # CRITICAL: pandas 2.2.0 requires numpy <2.0
 
-# HTTP requests (for downloading CSV files)
+# HTTP requests (for downloading CSV files)  
 requests==2.31.0
+
+# Database ORM
+sqlalchemy==2.0.25  # Using version from main project (compatible with Airflow 2.10.0)
+
+# Jupyter notebook (for data validation)
+jupyter==1.0.0
+notebook==7.0.6
+ipykernel==6.27.1
+
+# Data visualization (optional but useful for validation)
+matplotlib==3.8.2
+seaborn==0.13.0
+
+# Markdown table generation (for nice notebook output)
+tabulate==0.9.0
 
 # Testing
 pytest==8.0.0
@@ -21,25 +45,3 @@ flake8==7.0.0
 
 # Utilities
 python-dotenv==1.0.0
-sqlalchemy==2.0.25
-
-# -----------------------------------------------------------------------------
-# NOTES IMPORTANTES
-# -----------------------------------------------------------------------------
-# 
-# 1. VERSIONS PINNED (==):
-#    - On fixe les versions exactes pour éviter les surprises
-#    - En prod, c'est CRITIQUE (pas de "pandas>=2.0" qui pourrait installer 3.0)
-#
-# 2. ORDRE D'INSTALLATION:
-#    - pip installe dans l'ordre du fichier
-#    - Airflow en premier (il installe beaucoup de dépendances)
-#    - Les autres après (évite les conflits)
-#
-# 3. COMPATIBILITÉ:
-#    - Testé ensemble, ces versions fonctionnent bien
-#    - Si tu upgrades une librairie, teste TOUT
-#
-# 4. DOCKER vs LOCAL:
-#    - requirements.txt pour Docker (dans le Dockerfile si on en avait un)
-#    - Pour dev local: pip install -r requirements.txt dans un venv

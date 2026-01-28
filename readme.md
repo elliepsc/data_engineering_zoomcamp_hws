@@ -22,9 +22,9 @@ The project follows the Zoomcamp and is organized by module, covering the full d
 | Module | Topics | Status | Completion |
 |--------|--------|--------|------------|
 | **1** | Docker & Terraform | ✅ Complete | Jan 2026 |
-| **2** | Workflow Orchestration | 🔜 Started | - |
+| **2** | Workflow Orchestration | ✅ Complete| Jan 2026 |
 | **3** | Data Warehouse | ⏳ Not Started | - |
-| **4** | Analytics Engineering | ⏳ Not Started | - |
+| **4** | Analytics Engineering | 🔜 Started | - |
 | **5** | Batch Processing | ⏳ Not Started | - |
 | **6** | Streaming | ⏳ Not Started | - |
 

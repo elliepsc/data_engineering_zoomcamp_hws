@@ -1,0 +1,21 @@
+# Module 4 - Analytics Engineering with dbt
+# Python dependencies
+
+# dbt with DuckDB adapter
+dbt-core==1.7.4
+dbt-duckdb==1.7.2
+
+# Data manipulation
+pandas==2.1.4
+pyarrow==14.0.2
+
+# Utilities for data download
+requests==2.31.0
+tqdm==4.66.1
+
+# Optional: Data quality
+great-expectations==0.18.8
+
+# Optional: BigQuery adapter (for production deployment)
+# dbt-bigquery==1.7.4
+# google-cloud-bigquery==3.14.1

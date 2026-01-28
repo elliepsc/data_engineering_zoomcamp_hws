@@ -1,0 +1,39 @@
+# Docker Compose for Module 4 - Analytics Engineering
+
+version: '3.8'
+
+services:
+  dbt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dbt-analytics-engineering
+    volumes:
+      # Mount entire project directory
+      - ./:/workspace
+      # Mount dbt profiles (if you have one locally)
+      - ~/.dbt:/root/.dbt:ro
+    working_dir: /workspace/taxi_rides_ny
+    environment:
+      # DuckDB configuration
+      - DBT_PROFILES_DIR=/workspace
+      # Optional: BigQuery credentials (for production)
+      # - GOOGLE_APPLICATION_CREDENTIALS=/workspace/credentials/gcp-key.json
+    ports:
+      # dbt docs serve
+      - "8080:8080"
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+    networks:
+      - dbt-network
+
+networks:
+  dbt-network:
+    driver: bridge
+
+# Usage:
+# Build: docker-compose build
+# Run:   docker-compose up -d
+# Shell: docker-compose exec dbt bash
+# Stop:  docker-compose down

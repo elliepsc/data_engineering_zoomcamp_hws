@@ -1,29 +1,71 @@
-# dbt profiles configuration
-# Copy this file to ~/.dbt/profiles.yml
+# dbt profiles configuration - TEMPLATE
+# 
+# IMPORTANT: This is a TEMPLATE file for Git repository
+# DO NOT put real credentials here
+#
+# Setup instructions:
+#   1. Copy this file: cp profiles.yml.example ~/.dbt/profiles.yml
+#   2. Edit ~/.dbt/profiles.yml with your actual credentials
+#   3. Never commit ~/.dbt/profiles.yml or profiles.yml to Git
+#
+# WHY separate location?
+#   - Security: Credentials stay on your machine, never in Git
+#   - Team: Each developer has their own ~/.dbt/profiles.yml
+#   - Pro: Standard dbt practice for production environments
 
 taxi_rides_ny:
-  target: dev  # Use 'dev' for local DuckDB, 'prod' for BigQuery
+  target: dev  # Default target (use 'dev' for local, 'prod' for BigQuery)
   
   outputs:
+    # =====================================
     # Local development with DuckDB
+    # =====================================
     dev:
       type: duckdb
-      path: taxi_rides_ny.duckdb  # Database file in project root
+      # Path relative to dbt working_dir (/workspace/taxi_rides_ny/)
+      path: /workspace/taxi_rides_ny/taxi_rides_ny.duckdb
       threads: 4
-      extensions:
-        - parquet  # Enable parquet reading
+      # DuckDB extensions (optional, auto-loaded if needed)
+      # extensions:
+      #   - parquet
     
-    # Production with BigQuery (for later)
+    # =====================================
+    # Production with BigQuery
+    # =====================================
+    # Configure when ready to deploy to GCP
     prod:
       type: bigquery
-      method: oauth
-      project: your-project-id  # Replace with actual GCP project ID
-      dataset: taxi_dbt_prod
+      method: oauth  # or 'service-account' for CI/CD
+      project: your-project-id  # REPLACE: GCP project ID
+      dataset: taxi_dbt_prod     # REPLACE: BigQuery dataset name
       threads: 4
       timeout_seconds: 300
-      location: EU  # or US
+      location: EU  # or 'US' depending on your data location
       priority: interactive
+      
+      # For service account (CI/CD, production):
+      # method: service-account
+      # keyfile: /path/to/service-account.json
+      
+      # For development with user OAuth:
+      # method: oauth
+      # No keyfile needed, uses: gcloud auth application-default login
 
-# Usage:
-# dbt run --target dev   (uses DuckDB locally)
-# dbt run --target prod  (uses BigQuery)
+# =====================================
+# USAGE
+# =====================================
+# Run with specific target:
+#   dbt run --target dev   # Uses DuckDB locally
+#   dbt run --target prod  # Uses BigQuery (requires GCP auth)
+#
+# Default (no --target flag):
+#   Uses 'target: dev' defined above
+#
+# =====================================
+# SECURITY NOTES
+# =====================================
+# - This template is safe to commit to Git
+# - ~/.dbt/profiles.yml should NEVER be committed
+# - Add 'profiles.yml' to .gitignore
+# - Use environment variables for sensitive values in prod:
+#     project: "{{ env_var('GCP_PROJECT_ID') }}"

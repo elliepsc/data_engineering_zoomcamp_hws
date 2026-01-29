@@ -15,7 +15,7 @@ services:
     working_dir: /workspace/taxi_rides_ny
     environment:
       # DuckDB configuration
-      - DBT_PROFILES_DIR=/workspace
+      # - DBT_PROFILES_DIR=/workspace
       # Optional: BigQuery credentials (for production)
       # - GOOGLE_APPLICATION_CREDENTIALS=/workspace/credentials/gcp-key.json
     ports:
@@ -36,3 +36,24 @@ networks:
 # Run:   docker-compose up -d
 # Shell: docker-compose exec dbt bash
 # Stop:  docker-compose down
+
+
+# First-time setup:
+#   1. mkdir -p ~/.dbt
+#   2. cp profiles.yml.example ~/.dbt/profiles.yml
+#   3. Edit ~/.dbt/profiles.yml with your configuration
+#
+# Build and run:
+#   make build    # or: docker-compose build
+#   make up       # or: docker-compose up -d
+#
+# Development:
+#   make shell    # or: docker-compose exec dbt bash
+#   make dbt-run  # or: docker-compose exec dbt dbt run
+#
+# Stop:
+#   make down     # or: docker-compose down
+#
+# View dbt docs:
+#   make dbt-docs # or: docker-compose exec dbt dbt docs serve
+#   Open: http://localhost:38080

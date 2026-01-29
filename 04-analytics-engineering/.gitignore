@@ -51,5 +51,12 @@ BACKFILL_GUIDE.md
 dags/.archives/
 dags/*backup
 
-
+# Credentials (IMPORTANT: never commit)
+profiles.yml
+.env
+*.key
+*.json
+.user.yml
 documentation/
+
+

@@ -28,3 +28,5 @@ great-expectations==0.18.8
 # Optional: BigQuery adapter (for production deployment)
 # dbt-bigquery==1.7.4
 # google-cloud-bigquery==3.14.1
+
+protobuf<5.0.0,>=4.0.0

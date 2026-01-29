@@ -1,6 +1,5 @@
 # Tests and documentation for advanced core models
 
-version: 2
 
 models:
   # Monthly Fare Percentiles

@@ -1,6 +1,5 @@
 # Docker Compose for Module 4 - Analytics Engineering
 
-
 services:
   dbt:
     build:
@@ -10,17 +9,32 @@ services:
     volumes:
       # Mount entire project directory
       - ./:/workspace
-      # Mount dbt profiles (if you have one locally)
+      
+      # Mount dbt profiles from local ~/.dbt/ (PRO/TEAM approach)
+      # :ro = read-only for security (prevents accidental modification of credentials)
+      # WHY: Keeps credentials separate from code repository (never committed to Git)
+      # dbt will use profiles.yml from ~/.dbt/ on your host machine
       - ~/.dbt:/root/.dbt:ro
+      
     working_dir: /workspace/taxi_rides_ny
     environment:
-      # DuckDB configuration
-      # - DBT_PROFILES_DIR=/workspace
-      # Optional: BigQuery credentials (for production)
-      # - GOOGLE_APPLICATION_CREDENTIALS=/workspace/credentials/gcp-key.json
+      # Use standard dbt location for PRO/TEAM setup
+      # This keeps credentials (local) separate from code (Git repository)
+      DBT_PROFILES_DIR: /root/.dbt
+      
+      # Optional: BigQuery credentials (for production deployment)
+      # GOOGLE_APPLICATION_CREDENTIALS: /workspace/credentials/gcp-key.json
+      
     ports:
-      # dbt docs serve
-      - "38080:8080"      # was "8080:8080" to expose on host but conflict with other services (airflow)
+      # dbt docs serve on port 38080 (changed from default 8080)
+      # WHY: Avoid port conflicts in data engineering stack:
+      #   - Airflow    → 8080
+      #   - Kestra     → 18080
+      #   - pgAdmin    → 28080
+      #   - dbt docs   → 38080  ← we are here
+      #   - Superset   → 48080 (future)
+      - "38080:8080"
+      
     command: /bin/bash
     stdin_open: true
     tty: true
@@ -31,13 +45,10 @@ networks:
   dbt-network:
     driver: bridge
 
-# Usage:
-# Build: docker-compose build
-# Run:   docker-compose up -d
-# Shell: docker-compose exec dbt bash
-# Stop:  docker-compose down
-
-
+# ============================================
+# USAGE INSTRUCTIONS
+# ============================================
+# 
 # First-time setup:
 #   1. mkdir -p ~/.dbt
 #   2. cp profiles.yml.example ~/.dbt/profiles.yml

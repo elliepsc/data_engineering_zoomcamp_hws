@@ -1,8 +1,4 @@
-/*
-Staging model: For-Hire Vehicle (FHV) Trip Data
-Objective: Prepare FHV 2019 data for analysis
-Specificity: Filter dispatching_base_num (required Q6)
-*/
+
 
 {{
   config(
@@ -48,10 +44,3 @@ filtered_and_renamed as (
 
 select * from filtered_and_renamed
 
-/*
-Notes:
-- FHV = For-Hire Vehicles (Uber, Lyft, etc.)
-- Fewer columns than taxi (no payment, fare, etc.)
-- dispatching_base_num = dispatch base identifier
-- Filter NULL is an EXPLICIT homework requirement
-*/

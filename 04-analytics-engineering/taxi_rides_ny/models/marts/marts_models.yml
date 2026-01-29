@@ -97,10 +97,10 @@ models:
       - name: revenue_monthly_total_amount
         description: "Total revenue for the month in this zone"
 
-/*
-Notes:
-- unique: No duplicates
-- not_null: Required value
-- relationships: Check foreign keys (e.g., location_id exists in dim_zones)
-- dbt_utils requires dbt-utils package (to be installed)
-*/
+# /*
+# Notes:
+# - unique: No duplicates
+# - not_null: Required value
+# - relationships: Check foreign keys (e.g., location_id exists in dim_zones)
+# - dbt_utils requires dbt-utils package (to be installed)
+# */

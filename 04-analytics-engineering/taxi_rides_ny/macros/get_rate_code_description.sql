@@ -1,15 +1,4 @@
 {% macro get_rate_code_description(column_name) %}
-/*
-Macro: Rate Code Description
-Purpose: Convert rate_code_id to human-readable string
-Usage: {{ get_rate_code_description('rate_code_id') }}
-
-Example:
-SELECT 
-    {{ get_rate_code_description('rate_code_id') }} AS rate_type,
-    COUNT(*) AS trip_count
-FROM {{ ref('fct_trips') }}
-GROUP BY 1
 */
     CASE {{ column_name }}
         WHEN 1 THEN 'Standard rate'

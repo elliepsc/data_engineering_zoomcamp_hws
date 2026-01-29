@@ -1,8 +1,4 @@
-/*
-Mart model: Monthly Zone Revenue
-Objective: Monthly aggregation of revenue and trips by zone
-Target questions: Q3, Q4, Q5
-*/
+
 
 {{
   config(
@@ -46,13 +42,3 @@ monthly_aggregates as (
 )
 
 select * from monthly_aggregates
-
-/*
-Notes:
-- GROUP BY year, month, zone = monthly granularity
-- LEFT JOIN zones for zone names
-- Metrics: trip count, revenue, averages
-- Q3: count(*) of this table
-- Q4: filter service_type='Green', year=2020, max(revenue)
-- Q5: filter service_type='Green', year=2019, month=10, sum(trips)
-*/

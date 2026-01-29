@@ -1,7 +1,6 @@
 # Staging models tests and documentation
 # Tests run with: dbt test
 
-version: 2
 
 models:
   # Staging Green Taxi
@@ -96,11 +95,11 @@ models:
           - accepted_values:
               values: ['FHV']
 
-/*
-Testing notes:
-- not_null: Required value
-- accepted_values: Whitelist of allowed values
-- Q2: If payment_type=6 appears and is not in the list,
-      dbt test FAILS (non-zero exit code)
-- Tests run with: dbt test --select stg_green_tripdata
-*/
+# /*
+# Testing notes:
+# - not_null: Required value
+# - accepted_values: Whitelist of allowed values
+# - Q2: If payment_type=6 appears and is not in the list,
+#       dbt test FAILS (non-zero exit code)
+# - Tests run with: dbt test --select stg_green_tripdata
+# */

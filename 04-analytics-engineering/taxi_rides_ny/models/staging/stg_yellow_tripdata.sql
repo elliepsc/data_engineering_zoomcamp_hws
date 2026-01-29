@@ -1,8 +1,4 @@
-/*
-Staging model: Yellow Taxi Trip Data
-Objective: Identical structure to stg_green_tripdata to enable union
-Transformation: Raw source → Analytics-ready model
-*/
+
 
 {{
   config(
@@ -63,9 +59,4 @@ renamed as (
 
 select * from renamed
 
-/*
-Notes:
-- Structure IDENTICAL to stg_green_tripdata
-- Enables UNION without column issues
-- service_type = only business difference
-*/
+

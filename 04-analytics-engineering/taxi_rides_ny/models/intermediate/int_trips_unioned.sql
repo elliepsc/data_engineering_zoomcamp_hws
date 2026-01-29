@@ -1,8 +1,4 @@
-/*
-Intermediate model: Union of Green and Yellow trips
-Objective: Consolidate both taxi types into single dataset
-Layer: Intermediate (business logic)
-*/
+
 
 {{
   config(
@@ -29,10 +25,3 @@ trips_unioned as (
 
 select * from trips_unioned
 
-/*
-dbt Notes:
-- {{ ref('model') }} = reference to another dbt model
-- dbt automatically manages dependencies (lineage)
-- UNION ALL because identical structures guaranteed by staging
-- This model is required for Q1 (understand dbt run --select)
-*/

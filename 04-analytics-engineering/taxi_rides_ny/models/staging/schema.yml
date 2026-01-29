@@ -1,7 +1,6 @@
 # Raw data sources
 # Defines existing BigQuery tables that dbt will transform
 
-version: 2
 
 sources:
   - name: raw

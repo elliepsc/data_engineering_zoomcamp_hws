@@ -1,8 +1,4 @@
-/*
-Mart model: Trips Fact Table
-Objective: Final analytics-ready table with calculated metrics
-Layer: Marts (business-ready)
-*/
+
 
 {{
   config(
@@ -21,12 +17,12 @@ trips_with_metrics as (
         *,
         
         -- Calculated metrics
-        timestamp_diff(dropoff_datetime, pickup_datetime, second) as trip_duration_seconds,
+        EXTRACT(EPOCH FROM (dropoff_datetime - pickup_datetime)) as trip_duration_seconds,
         timestamp_diff(dropoff_datetime, pickup_datetime, minute) as trip_duration_minutes,
         
         -- Business logic: invalid trip if negative/zero duration
         case
-            when timestamp_diff(dropoff_datetime, pickup_datetime, second) <= 0 then true
+            when EXTRACT(EPOCH FROM (dropoff_datetime - pickup_datetime)) <= 0 then true
             when trip_distance <= 0 then true
             when fare_amount <= 0 then true
             else false
@@ -43,11 +39,3 @@ trips_with_metrics as (
 )
 
 select * from trips_with_metrics
-
-/*
-Notes:
-- Materialization TABLE for performance (vs VIEW)
-- Business metrics calculated once
-- Temporal dimensions for future GROUP BY
-- is_invalid_trip enables filtering in analyses
-*/

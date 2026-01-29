@@ -1,8 +1,4 @@
-/*
-Staging model: Green Taxi Trip Data
-Objective: Clean, normalize and type raw data
-Transformation: Raw source → Analytics-ready model
-*/
+
 
 {{
   config(
@@ -11,11 +7,6 @@ Transformation: Raw source → Analytics-ready model
   )
 }}
 
-/*
-Staging model: Green Taxi Trip Data
-Objective: Clean, normalize and type raw data
-Transformation: Raw source → Analytics-ready model
-*/
 
 {{
   config(
@@ -77,10 +68,4 @@ renamed as (
 
 select * from renamed
 
-/* 
-Notes:
-- lpep = Livery Passenger Enhancement Program (Green taxi)
-- Renamed for consistency with yellow taxi (tpep)
-- service_type enables union of both taxi types
-- Systematic casting to guarantee correct types
-*/
+

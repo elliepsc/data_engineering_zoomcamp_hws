@@ -1,6 +1,5 @@
 # Docker Compose for Module 4 - Analytics Engineering
 
-version: '3.8'
 
 services:
   dbt:

@@ -1,0 +1,106 @@
+# Staging models tests and documentation
+# Tests run with: dbt test
+
+version: 2
+
+models:
+  # Staging Green Taxi
+  - name: stg_green_tripdata
+    description: "Green taxi trips (2019-2020) - Cleaned and normalized"
+    columns:
+      - name: vendor_id
+        description: "Taxi technology provider ID"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2]
+      
+      - name: pickup_datetime
+        description: "Trip start timestamp"
+        data_tests:
+          - not_null
+      
+      - name: dropoff_datetime
+        description: "Trip end timestamp"
+        data_tests:
+          - not_null
+      
+      - name: passenger_count
+        description: "Number of passengers"
+        data_tests:
+          - not_null
+      
+      - name: payment_type
+        description: "Payment method code"
+        data_tests:
+          - accepted_values:
+              values: [1, 2, 3, 4, 5, 6]
+              # Note Q2: If new value appears, test FAILS
+      
+      - name: service_type
+        description: "Taxi type identifier"
+        data_tests:
+          - accepted_values:
+              values: ['Green']
+
+  # Staging Yellow Taxi
+  - name: stg_yellow_tripdata
+    description: "Yellow taxi trips (2019-2020) - Cleaned and normalized"
+    columns:
+      - name: vendor_id
+        description: "Taxi technology provider ID"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2]
+      
+      - name: pickup_datetime
+        description: "Trip start timestamp"
+        data_tests:
+          - not_null
+      
+      - name: dropoff_datetime
+        description: "Trip end timestamp"
+        data_tests:
+          - not_null
+      
+      - name: payment_type
+        description: "Payment method code"
+        data_tests:
+          - accepted_values:
+              values: [1, 2, 3, 4, 5, 6]
+      
+      - name: service_type
+        description: "Taxi type identifier"
+        data_tests:
+          - accepted_values:
+              values: ['Yellow']
+
+  # Staging FHV
+  - name: stg_fhv_tripdata
+    description: "FHV trips (2019) - Filtered dispatching_base_num NOT NULL"
+    columns:
+      - name: dispatching_base_num
+        description: "TLC base license number"
+        data_tests:
+          - not_null  # Required by Q6
+      
+      - name: pickup_datetime
+        description: "Trip start timestamp"
+        data_tests:
+          - not_null
+      
+      - name: service_type
+        description: "Service type identifier"
+        data_tests:
+          - accepted_values:
+              values: ['FHV']
+
+/*
+Testing notes:
+- not_null: Required value
+- accepted_values: Whitelist of allowed values
+- Q2: If payment_type=6 appears and is not in the list,
+      dbt test FAILS (non-zero exit code)
+- Tests run with: dbt test --select stg_green_tripdata
+*/

@@ -1,0 +1,110 @@
+# Tests and documentation for advanced core models
+
+version: 2
+
+models:
+  # Monthly Fare Percentiles
+  - name: fct_monthly_fare_percentiles
+    description: "Monthly fare percentiles (P90, P95, P97) for pricing analysis and anomaly detection"
+    columns:
+      - name: service_type
+        description: "Taxi type (Green or Yellow)"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['Green', 'Yellow']
+      
+      - name: year
+        description: "Year of the month"
+        data_tests:
+          - not_null
+      
+      - name: month_number
+        description: "Month number (1-12)"
+        data_tests:
+          - not_null
+      
+      - name: p90_fare
+        description: "90th percentile fare amount"
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      
+      - name: p95_fare
+        description: "95th percentile fare amount"
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= p90_fare"
+              config:
+                severity: warn
+      
+      - name: p97_fare
+        description: "97th percentile fare amount"
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= p95_fare"
+              config:
+                severity: warn
+      
+      - name: trip_count
+        description: "Number of trips in the month"
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "> 0"
+
+  # Monthly Revenue Growth
+  - name: fct_monthly_revenue_growth
+    description: "Month-over-month revenue growth by zone and service type"
+    columns:
+      - name: service_type
+        description: "Taxi type"
+        data_tests:
+          - not_null
+      
+      - name: pickup_zone
+        description: "Pickup zone name"
+        data_tests:
+          - not_null
+      
+      - name: revenue
+        description: "Total revenue for the month"
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      
+      - name: mom_growth_pct
+        description: "Month-over-month growth percentage"
+        data_tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= -100"
+              config:
+                severity: warn
+      
+      - name: revenue_per_trip
+        description: "Average revenue per trip"
+        data_tests:
+          - dbt_utils.expression_is_true:
+              expression: "> 0"
+              config:
+                where: "trip_count > 0"
+
+  # Payment Analysis
+  - name: fct_payment_analysis
+    description: "Payment method and rate code analysis using macros"
+    columns:
+      - name: payment_method
+        description: "Payment method description (from macro)"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['Credit card', 'Cash', 'No charge', 'Dispute', 'Unknown', 'Voided trip']
+      
+      - name: rate_type
+        description: "Rate code description (from macro)"
+        data_tests:
+          - not_null

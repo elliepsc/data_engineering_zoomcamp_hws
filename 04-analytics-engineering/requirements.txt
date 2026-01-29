@@ -1,7 +1,16 @@
 # Module 4 - Analytics Engineering with dbt
+
+# LOCAL DEVELOPMENT (DuckDB):
+#   pip install -r requirements.txt
+
+# SWITCHING BETWEEN ENVIRONMENTS:
+#   dbt run --target dev   (uses DuckDB)
+#   dbt run --target prod  (uses BigQuery)
+
+
 # Python dependencies
 
-# dbt with DuckDB adapter
+# dbt with DuckDB adapter (for local development)
 dbt-core==1.7.4
 dbt-duckdb==1.7.2
 

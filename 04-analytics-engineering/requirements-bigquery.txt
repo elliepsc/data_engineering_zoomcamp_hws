@@ -1,0 +1,32 @@
+# BigQuery-specific requirements
+# Install this INSTEAD of requirements.txt if using BigQuery
+
+# INSTALLATION:
+# pip install -r requirements-bigquery.txt
+# AUTHENTICATION: 
+# gcloud auth application-default login
+# or
+# export GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json
+# USAGE:
+# dbt run --target prod
+# (profiles.yml must have BigQuery configuration)
+
+
+dbt-core==1.7.4
+dbt-bigquery==1.7.4  # BigQuery adapter instead of DuckDB
+
+# Data manipulation
+pandas==2.1.4
+pyarrow==14.0.2
+
+# Google Cloud dependencies
+google-cloud-bigquery==3.14.1
+google-auth==2.25.2
+google-auth-oauthlib==1.2.0
+
+# Utilities for data download
+requests==2.31.0
+tqdm==4.66.1
+
+# Optional: Data quality
+great-expectations==0.18.8  

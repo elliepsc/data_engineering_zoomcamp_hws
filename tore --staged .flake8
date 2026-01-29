@@ -1,0 +1,610 @@
+[1mdiff --git a/04-analytics-engineering/.gitignore b/04-analytics-engineering/.gitignore[m
+[1mindex f1ec03c..b597494 100644[m
+[1m--- a/04-analytics-engineering/.gitignore[m
+[1m+++ b/04-analytics-engineering/.gitignore[m
+[36m@@ -1,87 +1,47 @@[m
+[31m-[m
+[31m-.env[m
+[31m-*.env[m
+[31m-!.env.example  # ← Exception: .env.example est OK (pas de vrais secrets)[m
+[31m-[m
+[31m-# Fichiers credentials divers[m
+[31m-credentials.json[m
+[31m-service_account.json[m
+[31m-*.pem[m
+[31m-*.key[m
+[31m-[m
+[31m-# Bytecode Python (fichiers compilés)[m
+[31m-__pycache__/[m
+[31m-*.py[cod][m
+[31m-*$py.class[m
+[31m-[m
+[31m-# Distribution / packaging[m
+[31m-dist/[m
+[31m-build/[m
+[31m-*.egg-info/[m
+[31m-[m
+[31m-# Virtual environments (si tu en utilises)[m
+[31m-venv/[m
+[31m-env/[m
+[31m-ENV/[m
+[31m-[m
+[31m-# 3. AIRFLOW GENERATED FILES[m
+[31m-[m
+[31m-# Airflow logs (très verbeux)[m
+[32m+[m[32m# dbt artifacts[m
+[32m+[m[32mtarget/[m
+[32m+[m[32mdbt_packages/[m
+ logs/[m
+[31m-airflow/logs/[m
+[31m-[m
+[31m-# Airflow database SQLite locale (si pas Postgres)[m
+[31m-airflow.db[m
+[31m-airflow.cfg  # Config générée automatiquement[m
+[31m-[m
+[31m-# Airflow PIDs et lockfiles[m
+[31m-*.pid[m
+[31m-*.lock[m
+[31m-[m
+[31m-# Scheduler logs[m
+[31m-scheduler.log[m
+[31m-webserver.log[m
+[31m-[m
+[31m-# 4. DATA FILES (si tu télécharges les CSV localement)[m
+[32m+[m[32mdbt_modules/[m
+ [m
+[31m-# CSV files[m
+[31m-*.csv[m
+[31m-*.parquet[m
+[31m-*.json  # Sauf si c'est de la config[m
+[31m-[m
+[31m-# Data directories[m
+[31m-data/[m
+[31m-raw_data/[m
+[31m-processed_data/[m
+[31m-[m
+[31m-# 5. IDE / EDITOR FILES[m
+[32m+[m[32m# Python[m
+[32m+[m[32mvenv/[m
+[32m+[m[32m__pycache__/[m
+[32m+[m[32m*.pyc[m
+[32m+[m[32m.pytest_cache/[m
+ [m
+[31m-# VSCode[m
+[32m+[m[32m# IDE[m
+ .vscode/[m
+[31m-[m
+[31m-# PyCharm[m
+ .idea/[m
+[32m+[m[32m*.swp[m
+[32m+[m[32m*.swo[m
+ [m
+[31m-# macOS[m
+[32m+[m[32m# OS[m
+ .DS_Store[m
+[32m+[m[32mThumbs.db[m
+ [m
+[31m-# Linux[m
+[31m-*~[m
+[31m-[m
+[31m-# 6. TESTING / COVERAGE[m
+[32m+[m[32m# Credentials (IMPORTANT: never commit)[m
+[32m+[m[32mprofiles.yml[m
+[32m+[m[32m.env[m
+[32m+[m[32m*.key[m
+[32m+[m[32m*.json[m
+ [m
+[31m-.pytest_cache/[m
+[31m-.coverage[m
+[31m-htmlcov/[m
+[31m-*.cover[m
+[32m+[m[32m# BigQuery[m
+[32m+[m[32m.bigqueryrc[m
+ [m
+[32m+[m[32m# DuckDB database[m
+[32m+[m[32m*.duckdb[m
+[32m+[m[32m*.duckdb.wal[m
+ [m
+[31m-# 7. DOCKER VOLUMES (si utilisés)[m
+[31m-# POURQUOI: Docker peut créer des volumes locaux avec des données[m
+[32m+[m[32m# Downloaded data (large files)[m
+[32m+[m[32mdata/[m
+[32m+[m[32m*.parquet[m
+[32m+[m[32m*.csv.gz[m
+ [m
+[31m-postgres-db-volume/[m
+[32m+[m[32m# Docker[m
+[32m+[m[32m.docker/[m
+ [m
+[31m-# 7. Draft & work-in-progress files[m
+[32m+[m[32m# draft & work in progress files[m
+ draft/[m
+ *_DRAFT.md[m
+ *DRAFT*[m
+[36m@@ -90,5 +50,6 @@[m [mtests/[m
+ BACKFILL_GUIDE.md[m
+ dags/.archives/[m
+ dags/*backup[m
+[31m-validation/[m
+ [m
+[32m+[m
+[32m+[m[32mdocumentation/[m
+\ No newline at end of file[m
+[1mdiff --git a/04-analytics-engineering/requirements-bigquery.txt b/04-analytics-engineering/requirements-bigquery.txt[m
+[1mnew file mode 100644[m
+[1mindex 0000000..4dd9bd0[m
+[1m--- /dev/null[m
+[1m+++ b/04-analytics-engineering/requirements-bigquery.txt[m
+[36m@@ -0,0 +1,32 @@[m
+[32m+[m[32m# BigQuery-specific requirements[m
+[32m+[m[32m# Install this INSTEAD of requirements.txt if using BigQuery[m
+[32m+[m
+[32m+[m[32m# INSTALLATION:[m
+[32m+[m[32m# pip install -r requirements-bigquery.txt[m
+[32m+[m[32m# AUTHENTICATION:[m[41m [m
+[32m+[m[32m# gcloud auth application-default login[m
+[32m+[m[32m# or[m
+[32m+[m[32m# export GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json[m
+[32m+[m[32m# USAGE:[m
+[32m+[m[32m# dbt run --target prod[m
+[32m+[m[32m# (profiles.yml must have BigQuery configuration)[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdbt-core==1.7.4[m
+[32m+[m[32mdbt-bigquery==1.7.4  # BigQuery adapter instead of DuckDB[m
+[32m+[m
+[32m+[m[32m# Data manipulation[m
+[32m+[m[32mpandas==2.1.4[m
+[32m+[m[32mpyarrow==14.0.2[m
+[32m+[m
+[32m+[m[32m# Google Cloud dependencies[m
+[32m+[m[32mgoogle-cloud-bigquery==3.14.1[m
+[32m+[m[32mgoogle-auth==2.25.2[m
+[32m+[m[32mgoogle-auth-oauthlib==1.2.0[m
+[32m+[m
+[32m+[m[32m# Utilities for data download[m
+[32m+[m[32mrequests==2.31.0[m
+[32m+[m[32mtqdm==4.66.1[m
+[32m+[m
+[32m+[m[32m# Optional: Data quality[m
+[32m+[m[32mgreat-expectations==0.18.8[m[41m  [m
+[1mdiff --git a/04-analytics-engineering/requirements.txt b/04-analytics-engineering/requirements.txt[m
+[1mindex f5aef6b..8c559a4 100644[m
+[1m--- a/04-analytics-engineering/requirements.txt[m
+[1m+++ b/04-analytics-engineering/requirements.txt[m
+[36m@@ -1,7 +1,16 @@[m
+ # Module 4 - Analytics Engineering with dbt[m
+[32m+[m
+[32m+[m[32m# LOCAL DEVELOPMENT (DuckDB):[m
+[32m+[m[32m#   pip install -r requirements.txt[m
+[32m+[m
+[32m+[m[32m# SWITCHING BETWEEN ENVIRONMENTS:[m
+[32m+[m[32m#   dbt run --target dev   (uses DuckDB)[m
+[32m+[m[32m#   dbt run --target prod  (uses BigQuery)[m
+[32m+[m
+[32m+[m
+ # Python dependencies[m
+ [m
+[31m-# dbt with DuckDB adapter[m
+[32m+[m[32m# dbt with DuckDB adapter (for local development)[m
+ dbt-core==1.7.4[m
+ dbt-duckdb==1.7.2[m
+ [m
+[1mdiff --git a/04-analytics-engineering/taxi_rides_ny/macros/days_back.sql b/04-analytics-engineering/taxi_rides_ny/macros/days_back.sql[m
+[1mnew file mode 100644[m
+[1mindex 0000000..e9c881b[m
+[1m--- /dev/null[m
+[1m+++ b/04-analytics-engineering/taxi_rides_ny/macros/days_back.sql[m
+[36m@@ -0,0 +1,18 @@[m
+[32m+[m[32m{% macro days_back(default=30) %}[m
+[32m+[m[32m/*[m
+[32m+[m[32mMacro: Days Back Configuration[m
+[32m+[m[32mPurpose: Centralize date range logic with environment variable support[m
+[32m+[m[32mPrecedence: CLI var > ENV var > default value[m
+[32m+[m
+[32m+[m[32mUsage in model:[m
+[32m+[m[32mWHERE pickup_datetime >= CURRENT_DATE - INTERVAL '{{ days_back(7) }}' DAY[m
+[32m+[m
+[32m+[m[32mCommand line examples:[m
+[32m+[m[32mdbt run --vars '{"days_back": 90}'  # Override with CLI[m
+[32m+[m[32mexport DAYS_BACK=60 && dbt run      # Override with ENV var[m
+[32m+[m[32mdbt run                             # Use default (30)[m
+[32m+[m
+[32m+[m[32mRelated to: Module 4 2025 Question 2 (dbt Variables & Dynamic Models)[m
+[32m+[m[32m*/[m
+[32m+[m[32m    {{ var("days_back", env_var("DAYS_BACK", default)) }}[m
+[32m+[m[32m{% endmacro %}[m
+[1mdiff --git a/04-analytics-engineering/taxi_rides_ny/macros/get_payment_type_description.sql b/04-analytics-engineering/taxi_rides_ny/macros/get_payment_type_description.sql[m
+[1mnew file mode 100644[m
+[1mindex 0000000..66f2b6c[m
+[1m--- /dev/null[m
+[1m+++ b/04-analytics-engineering/taxi_rides_ny/macros/get_payment_type_description.sql[m
+[36m@@ -0,0 +1,23 @@[m
+[32m+[m[32m{% macro get_payment_type_description(column_name) %}[m
+[32m+[m[32m/*[m
+[32m+[m[32mMacro: Payment Type Description[m
+[32m+[m[32mPurpose: Convert payment_type code to human-readable string[m
+[32m+[m[32mUsage: {{ get_payment_type_description('payment_type') }}[m
+[32m+[m
+[32m+[m[32mExample:[m
+[32m+[m[32mSELECT[m[41m [m
+[32m+[m[32m    {{ get_payment_type_description('payment_type') }} AS payment_method,[m
+[32m+[m[32m    COUNT(*) AS trip_count[m
+[32m+[m[32mFROM {{ ref('stg_green_tripdata') }}[m
+[32m+[m[32mGROUP BY 1[m
+[32m+[m[32m*/[m
+[32m+[m[32m    CASE {{ column_name }}[m
+[32m+[m[32m        WHEN 1 THEN 'Credit card'[m
+[32m+[m[32m        WHEN 2 THEN 'Cash'[m
+[32m+[m[32m        WHEN 3 THEN 'No charge'[m
+[32m+[m[32m        WHEN 4 THEN 'Dispute'[m
+[32m+[m[32m        WHEN 5 THEN 'Unknown'[m
+[32m+[m[32m        WHEN 6 THEN 'Voided trip'[m
+[32m+[m[32m        ELSE 'Unknown'[m
+[32m+[m[32m    END[m
+[32m+[m[32m{% endmacro %}[m
+[1mdiff --git a/04-analytics-engineering/taxi_rides_ny/macros/get_rate_code_description.sql b/04-analytics-engineering/taxi_rides_ny/macros/get_rate_code_description.sql[m
+[1mnew file mode 100644[m
+[1mindex 0000000..7b61961[m
+[1m--- /dev/null[m
+[1m+++ b/04-analytics-engineering/taxi_rides_ny/macros/get_rate_code_description.sql[m
+[36m@@ -0,0 +1,23 @@[m
+[32m+[m[32m{% macro get_rate_code_description(column_name) %}[m
+[32m+[m[32m/*[m
+[32m+[m[32mMacro: Rate Code Description[m
+[32m+[m[32mPurpose: Convert rate_code_id to human-readable string[m
+[32m+[m[32mUsage: {{ get_rate_code_description('rate_code_id') }}[m
+[32m+[m
+[32m+[m[32mExample:[m
+[32m+[m[32mSELECT[m[41m [m
+[32m+[m[32m    {{ get_rate_code_description('rate_code_id') }} AS rate_type,[m
+[32m+[m[32m    COUNT(*) AS trip_count[m
+[32m+[m[32mFROM {{ ref('fct_trips') }}[m
+[32m+[m[32mGROUP BY 1[m
+[32m+[m[32m*/[m
+[32m+[m[32m    CASE {{ column_name }}[m
+[32m+[m[32m        WHEN 1 THEN 'Standard rate'[m
+[32m+[m[32m        WHEN 2 THEN 'JFK'[m
+[32m+[m[32m        WHEN 3 THEN 'Newark'[m
+[32m+[m[32m        WHEN 4 THEN 'Nassau or Westchester'[m
+[32m+[m[32m        WHEN 5 THEN 'Negotiated fare'[m
+[32m+[m[32m        WHEN 6 THEN 'Group ride'[m
+[32m+[m[32m        ELSE 'Unknown'[m
+[32m+[m[32m    END[m
+[32m+[m[32m{% endmacro %}[m
+[1mdiff --git a/04-analytics-engineering/taxi_rides_ny/models/core/core_models.yml b/04-analytics-engineering/taxi_rides_ny/models/core/core_models.yml[m
+[1mnew file mode 100644[m
+[1mindex 0000000..2e3589d[m
+[1m--- /dev/null[m
+[1m+++ b/04-analytics-engineering/taxi_rides_ny/models/core/core_models.yml[m
+[36m@@ -0,0 +1,110 @@[m
+[32m+[m[32m# Tests and documentation for advanced core models[m
+[32m+[m
+[32m+[m[32mversion: 2[m
+[32m+[m
+[32m+[m[32mmodels:[m
+[32m+[m[32m  # Monthly Fare Percentiles[m
+[32m+[m[32m  - name: fct_monthly_fare_percentiles[m
+[32m+[m[32m    description: "Monthly fare percentiles (P90, P95, P97) for pricing analysis and anomaly detection"[m
+[32m+[m[32m    columns:[m
+[32m+[m[32m      - name: service_type[m
+[32m+[m[32m        description: "Taxi type (Green or Yellow)"[m
+[32m+[m[32m        data_tests:[m
+[32m+[m[32m          - not_null[m
+[32m+[m[32m          - accepted_values:[m
+[32m+[m[32m              values: ['Green', 'Yellow'][m
+[32m+[m[41m      [m
+[32m+[m[32m      - name: year[m
+[32m+[m[32m        description: "Year of the month"[m
+[32m+[m[32m        data_tests:[m
+[32m+[m[32m          - not_null[m
+[32m+[m[41m      [m
+[32m+[m[32m      - name: month_number[m
+[32m+[m[32m        description: "Month number (1-12)"[m
+[32m+[m[32m        data_tests:[m
+[32m+[m[32m          - not_null[m
+[32m+[m[41m      [m
+[32m+[m[32m      - name: p90_fare[m
+[32m+[m[32m        description: "90th percentile fare amount"[m
+[32m+[m[32m        data_tests:[m
+[32m+[m[32m          - not_null[m
+[32m+[m[32m          - dbt_utils.expression_is_true:[m
+[32m+[m[32m              expression: ">= 0"[m
+[32m+[m[41m      [m
+[32m+[m[32m      - name: p95_fare[m
+[32m+[m[32m        description: "95th percentile fare amount"[m
+[32m+[m[32m        data_tests:[m
+[32m+[m[32m          - not_null[m
+[32m+[m[32m          - dbt_utils.expression_is_true:[m
+[32m+[m[32m              expression: ">= p90_fare"[m
+[32m+[m[32m              config:[m
+[32m+[m[32m                severity: warn[m
+[32m+[m[41m      [m
+[32m+[m[32m      - name: p97_fare[m
+[32m+[m[32m        description: "97th percentile fare amount"[m
+[32m+[m[32m        data_tests:[m
+[32m+[m[32m          - not_null[m
+[32m+[m[32m          - dbt_utils.expression_is_true:[m
+[32m+[m[32m              expression: ">= p95_fare"[m
+[32m+[m[32m              config:[m
+[32m+[m[32m                severity: warn[m
+[32m+[m[41m      [m
+[32m+[m[32m      - name: trip_count[m
+[32m+[m[32m        description: "Number of trips in the month"[m
+[32m+[m[32m        data_tests:[m
+[32m+[m[32m          - not_null[m
+[32m+[m[32m          - dbt_utils.expression_is_true:[m
+[32m+[m[32m              expression: "> 0"[m
+[32m+[m
+[32m+[m[32m  # Monthly Revenue Growth[m
+[32m+[m[32m  - name: fct_monthly_revenue_growth[m
+[32m+[m[32m    description: "Month-over-month revenue growth by zone and service type"[m
+[32m+[m[32m    columns:[m
+[32m+[m[32m      - name: service_type[m
+[32m+[m[32m        description: "Taxi type"[m
+[32m+[m[32m        data_tests:[m
+[32m+[m[32m          - not_null[m
+[32m+[m[41m      [m
+[32m+[m[32m      - name: pickup_zone[m
+[32m+[m[32m        description: "Pickup zone name"[m
+[32m+[m[32m        data_tests:[m
+[32m+[m[32m          - not_null[m
+[32m+[m[41m      [m
+[32m+[m[32m      - name: revenue[m
+[32m+[m[32m        description: "Total revenue for the month"[m
+[32m+[m[32m        data_tests:[m
+[32m+[m[32m          - not_null[m
+[32m+[m[32m          - dbt_utils.expression_is_true:[m
+[32m+[m[32m              expression: ">= 0"[m
+[32m+[m[41m      [m
+[32m+[m[32m      - name: mom_growth_pct[m
+[32m+[m[32m        description: "Month-over-month growth percentage"[m
+[32m+[m[32m        data_tests:[m
+[32m+[m[32m          - dbt_utils.expression_is_true:[m
+[32m+[m[32m              expression: ">= -100"[m
+[32m+[m[32m              config:[m
+[32m+[m[32m                severity: warn[m
+[32m+[m[41m      [m
+[32m+[m[32m      - name: revenue_per_trip[m
+[32m+[m[32m        description: "Average revenue per trip"[m
+[32m+[m[32m        data_tests:[m
+[32m+[m[32m          - dbt_utils.expression_is_true:[m
+[32m+[m[32m              expression: "> 0"[m
+[32m+[m[32m              config:[m
+[32m+[m[32m                where: "trip_count > 0"[m
+[32m+[m
+[32m+[m[32m  # Payment Analysis[m
+[32m+[m[32m  - name: fct_payment_analysis[m
+[32m+[m[32m    description: "Payment method and rate code analysis using macros"[m
+[32m+[m[32m    columns:[m
+[32m+[m[32m      - name: payment_method[m
+[32m+[m[32m        description: "Payment method description (from macro)"[m
+[32m+[m[32m        data_tests:[m
+[32m+[m[32m          - not_null[m
+[32m+[m[32m          - accepted_values:[m
+[32m+[m[32m              values: ['Credit card', 'Cash', 'No charge', 'Dispute', 'Unknown', 'Voided trip'][m
+[32m+[m[41m      [m
+[32m+[m[32m      - name: rate_type[m
+[32m+[m[32m        description: "Rate code description (from macro)"[m
+[32m+[m[32m        data_tests:[m
+[32m+[m[32m          - not_null[m
+[1mdiff --git a/04-analytics-engineering/taxi_rides_ny/models/core/fct_monthly_fare_percentiles.sql b/04-analytics-engineering/taxi_rides_ny/models/core/fct_monthly_fare_percentiles.sql[m
+[1mnew file mode 100644[m
+[1mindex 0000000..3501db1[m
+[1m--- /dev/null[m
+[1m+++ b/04-analytics-engineering/taxi_rides_ny/models/core/fct_monthly_fare_percentiles.sql[m
+[36m@@ -0,0 +1,69 @@[m
+[32m+[m[32m{{ config([m
+[32m+[m[32m    materialized='table',[m
+[32m+[m[32m    tags=['analytics', 'advanced', 'percentiles'][m
+[32m+[m[32m) }}[m
+[32m+[m
+[32m+[m[32m/*[m
+[32m+[m[32mMonthly Fare Percentiles Analysis[m
+[32m+[m[32mObjective: Calculate P90, P95, P97 fare distributions for pricing analysis[m
+[32m+[m[32mBusiness Value: Anomaly detection, pricing strategy, quality monitoring[m
+[32m+[m
+[32m+[m[32mRelated to: Module 4 2025 Question 6 (Fare Percentiles)[m
+[32m+[m[32m*/[m
+[32m+[m
+[32m+[m[32mWITH monthly_fares AS ([m
+[32m+[m[32m    SELECT[m[41m [m
+[32m+[m[32m        service_type,[m
+[32m+[m[32m        DATE_TRUNC('month', pickup_datetime) AS month,[m
+[32m+[m[32m        EXTRACT(YEAR FROM pickup_datetime) AS year,[m
+[32m+[m[32m        EXTRACT(MONTH FROM pickup_datetime) AS month_number,[m
+[32m+[m[32m        fare_amount,[m
+[32m+[m[32m        trip_distance,[m
+[32m+[m[32m        payment_type[m
+[32m+[m[32m    FROM {{ ref('fct_trips') }}[m
+[32m+[m[32m    WHERE fare_amount > 0[m
+[32m+[m[32m        AND trip_distance > 0[m
+[32m+[m[32m        AND is_invalid_trip = false[m
+[32m+[m[32m)[m
+[32m+[m
+[32m+[m[32mSELECT[m[41m [m
+[32m+[m[32m    service_type,[m
+[32m+[m[32m    year,[m
+[32m+[m[32m    month_number,[m
+[32m+[m[32m    month,[m
+[32m+[m[41m    [m
+[32m+[m[32m    -- Percentile calculations (DuckDB syntax)[m
+[32m+[m[32m    -- For BigQuery, use: PERCENTILE_CONT(fare_amount, 0.90) OVER()[m
+[32m+[m[32m    {% if target.type == 'duckdb' %}[m
+[32m+[m[32m        PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY fare_amount) AS p90_fare,[m
+[32m+[m[32m        PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY fare_amount) AS p95_fare,[m
+[32m+[m[32m        PERCENTILE_CONT(0.97) WITHIN GROUP (ORDER BY fare_amount) AS p97_fare,[m
+[32m+[m[32m    {% else %}[m
+[32m+[m[32m        PERCENTILE_CONT(fare_amount, 0.90) OVER() AS p90_fare,[m
+[32m+[m[32m        PERCENTILE_CONT(fare_amount, 0.95) OVER() AS p95_fare,[m
+[32m+[m[32m        PERCENTILE_CONT(fare_amount, 0.97) OVER() AS p97_fare,[m
+[32m+[m[32m    {% endif %}[m
+[32m+[m[41m    [m
+[32m+[m[32m    -- Supporting metrics[m
+[32m+[m[32m    COUNT(*) AS trip_count,[m
+[32m+[m[32m    ROUND(AVG(fare_amount), 2) AS avg_fare,[m
+[32m+[m[32m    ROUND(MIN(fare_amount), 2) AS min_fare,[m
+[32m+[m[32m    ROUND(MAX(fare_amount), 2) AS max_fare,[m
+[32m+[m[41m    [m
+[32m+[m[32m    -- Distance metrics for context[m
+[32m+[m[32m    ROUND(AVG(trip_distance), 2) AS avg_distance[m
+[32m+[m[41m    [m
+[32m+[m[32mFROM monthly_fares[m
+[32m+[m[32mGROUP BY service_type, year, month_number, month[m
+[32m+[m[32mORDER BY service_type, year, month_number[m
+[32m+[m
+[32m+[m[32m/*[m
+[32m+[m[32mExpected output (April 2020 from homework 2025):[m
+[32m+[m[32m- Green: {p97: 40.0, p95: 33.0, p90: 24.5}[m
+[32m+[m[32m- Yellow: {p97: 31.5, p95: 25.5, p90: 19.0}[m
+[32m+[m
+[32m+[m[32mQuery to verify:[m
+[32m+[m[32mSELECT service_type, p90_fare, p95_fare, p97_fare[m
+[32m+[m[32mFROM fct_monthly_fare_percentiles[m
+[32m+[m[32mWHERE year = 2020 AND month_number = 4;[m
+[32m+[m[32m*/[m
+[1mdiff --git a/04-analytics-engineering/taxi_rides_ny/models/core/fct_monthly_revenue_growth.sql b/04-analytics-engineering/taxi_rides_ny/models/core/fct_monthly_revenue_growth.sql[m
+[1mnew file mode 100644[m
+[1mindex 0000000..602882c[m
+[1m--- /dev/null[m
+[1m+++ b/04-analytics-engineering/taxi_rides_ny/models/core/fct_monthly_revenue_growth.sql[m
+[36m@@ -0,0 +1,107 @@[m
+[32m+[m[32m{{ config([m
+[32m+[m[32m    materialized='table',[m
+[32m+[m[32m    tags=['analytics', 'advanced', 'growth'][m
+[32m+[m[32m) }}[m
+[32m+[m
+[32m+[m[32m/*[m
+[32m+[m[32mMonthly Revenue Growth Analysis[m
+[32m+[m[32mObjective: Calculate MoM growth rates by zone and service type[m
+[32m+[m[32mBusiness Value: Performance tracking, trend analysis, strategic planning[m
+[32m+[m
+[32m+[m[32mSkills demonstrated:[m
+[32m+[m[32m- Window functions (LAG)[m
+[32m+[m[32m- Business metric calculations[m
+[32m+[m[32m- Financial analysis patterns[m
+[32m+[m[32m*/[m
+[32m+[m
+[32m+[m[32mWITH monthly_revenue AS ([m
+[32m+[m[32m    SELECT[m[41m [m
+[32m+[m[32m        service_type,[m
+[32m+[m[32m        pickup_zone,[m
+[32m+[m[32m        pickup_borough,[m
+[32m+[m[32m        DATE_TRUNC('month', pickup_datetime) AS month,[m
+[32m+[m[32m        EXTRACT(YEAR FROM pickup_datetime) AS year,[m
+[32m+[m[32m        EXTRACT(MONTH FROM pickup_datetime) AS month_number,[m
+[32m+[m[32m        SUM(total_amount) AS revenue,[m
+[32m+[m[32m        COUNT(*) AS trip_count[m
+[32m+[m[32m    FROM {{ ref('fct_trips') }}[m
+[32m+[m[32m    WHERE is_invalid_trip = false[m
+[32m+[m[32m        AND pickup_zone IS NOT NULL[m
+[32m+[m[32m    GROUP BY service_type, pickup_zone, pickup_borough, month, year, month_number[m
+[32m+[m[32m)[m
+[32m+[m
+[32m+[m[32mSELECT[m[41m [m
+[32m+[m[32m    service_type,[m
+[32m+[m[32m    pickup_zone,[m
+[32m+[m[32m    pickup_borough,[m
+[32m+[m[32m    year,[m
+[32m+[m[32m    month_number,[m
+[32m+[m[32m    month,[m
+[32m+[m[32m    ROUND(revenue, 2) AS revenue,[m
+[32m+[m[32m    trip_count,[m
+[32m+[m[41m    [m
+[32m+[m[32m    -- Previous month metrics using LAG window function[m
+[32m+[m[32m    ROUND(LAG(revenue, 1) OVER ([m
+[32m+[m[32m        PARTITION BY service_type, pickup_zone[m[41m [m
+[32m+[m[32m        ORDER BY year, month_number[m
+[32m+[m[32m    ), 2) AS prev_month_revenue,[m
+[32m+[m[41m    [m
+[32m+[m[32m    LAG(trip_count, 1) OVER ([m
+[32m+[m[32m        PARTITION BY service_type, pickup_zone[m[41m [m
+[32m+[m[32m        ORDER BY year, month_number[m
+[32m+[m[32m    ) AS prev_month_trip_count,[m
+[32m+[m[41m    [m
+[32m+[m[32m    -- Month-over-Month growth percentage[m
+[32m+[m[32m    ROUND([m
+[32m+[m[32m        100.0 * (revenue - LAG(revenue, 1) OVER ([m
+[32m+[m[32m            PARTITION BY service_type, pickup_zone[m[41m [m
+[32m+[m[32m            ORDER BY year, month_number[m
+[32m+[m[32m        )) / NULLIF(LAG(revenue, 1) OVER ([m
+[32m+[m[32m            PARTITION BY service_type, pickup_zone[m[41m [m
+[32m+[m[32m            ORDER BY year, month_number[m
+[32m+[m[32m        ), 0),[m
+[32m+[m[32m        2[m
+[32m+[m[32m    ) AS mom_growth_pct,[m
+[32m+[m[41m    [m
+[32m+[m[32m    -- Trip count growth[m
+[32m+[m[32m    ROUND([m
+[32m+[m[32m        100.0 * (trip_count - LAG(trip_count, 1) OVER ([m
+[32m+[m[32m            PARTITION BY service_type, pickup_zone[m[41m [m
+[32m+[m[32m            ORDER BY year, month_number[m
+[32m+[m[32m        )) / NULLIF(LAG(trip_count, 1) OVER ([m
+[32m+[m[32m            PARTITION BY service_type, pickup_zone[m[41m [m
+[32m+[m[32m            ORDER BY year, month_number[m
+[32m+[m[32m        ), 0),[m
+[32m+[m[32m        2[m
+[32m+[m[32m    ) AS mom_trip_growth_pct,[m
+[32m+[m[41m    [m
+[32m+[m[32m    -- Revenue per trip[m
+[32m+[m[32m    ROUND(revenue / NULLIF(trip_count, 0), 2) AS revenue_per_trip[m
+[32m+[m
+[32m+[m[32mFROM monthly_revenue[m
+[32m+[m[32mORDER BY service_type, pickup_zone, year, month_number[m
+[32m+[m
+[32m+[m[32m/*[m
+[32m+[m[32mSample queries:[m
+[32m+[m
+[32m+[m[32m-- Find zones with highest growth in January 2020[m
+[32m+[m[32mSELECT service_type, pickup_zone, revenue, mom_growth_pct[m
+[32m+[m[32mFROM fct_monthly_revenue_growth[m
+[32m+[m[32mWHERE year = 2020 AND month_number = 1[m
+[32m+[m[32m    AND mom_growth_pct IS NOT NULL[m
+[32m+[m[32mORDER BY mom_growth_pct DESC[m
+[32m+[m[32mLIMIT 10;[m
+[32m+[m
+[32m+[m[32m-- Identify declining zones (negative growth > 2 months)[m
+[32m+[m[32mWITH declining_zones AS ([m
+[32m+[m[32m    SELECT[m[41m [m
+[32m+[m[32m        service_type, pickup_zone,[m
+[32m+[m[32m        COUNT(*) as negative_months[m
+[32m+[m[32m    FROM fct_monthly_revenue_growth[m
+[32m+[m[32m    WHERE mom_growth_pct < 0[m
+[32m+[m[32m    GROUP BY service_type, pickup_zone[m
+[32m+[m[32m    HAVING COUNT(*) > 2[m
+[32m+[m[32m)[m
+[32m+[m[32mSELECT * FROM declining_zones[m
+[32m+[m[32mORDER BY negative_months DESC;[m
+[32m+[m[32m*/[m
+[1mdiff --git a/04-analytics-engineering/taxi_rides_ny/models/core/fct_payment_analysis.sql b/04-analytics-engineering/taxi_rides_ny/models/core/fct_payment_analysis.sql[m
+[1mnew file mode 100644[m
+[1mindex 0000000..0f406da[m
+[1m--- /dev/null[m
+[1m+++ b/04-analytics-engineering/taxi_rides_ny/models/core/fct_payment_analysis.sql[m
+[36m@@ -0,0 +1,26 @@[m
+[32m+[m[32m{{ config([m
+[32m+[m[32m    materialized='view',[m
+[32m+[m[32m    tags=['analytics', 'examples'][m
+[32m+[m[32m) }}[m
+[32m+[m
+[32m+[m[32m/*[m
+[32m+[m[32mPayment Analysis Example[m
+[32m+[m[32mDemonstrates usage of reusable macros[m
+[32m+[m[32m*/[m
+[32m+[m
+[32m+[m[32mSELECT[m[41m [m
+[32m+[m[32m    service_type,[m
+[32m+[m[32m    {{ get_payment_type_description('payment_type') }} AS payment_method,[m
+[32m+[m[32m    {{ get_rate_code_description('rate_code_id') }} AS rate_type,[m
+[32m+[m[32m    COUNT(*) AS trip_count,[m
+[32m+[m[32m    ROUND(SUM(total_amount), 2) AS total_revenue,[m
+[32m+[m[32m    ROUND(AVG(total_amount), 2) AS avg_revenue[m
+[32m+[m[32mFROM {{ ref('fct_trips') }}[m
+[32m+[m[32mWHERE pickup_datetime >= CURRENT_DATE - INTERVAL '{{ days_back(30) }}' DAY[m
+[32m+[m[32mGROUP BY service_type, payment_type, rate_code_id[m
+[32m+[m[32mORDER BY trip_count DESC[m
+[32m+[m
+[32m+[m[32m/*[m
+[32m+[m[32mRun with different time ranges:[m
+[32m+[m[32mdbt run --select fct_payment_analysis --vars '{"days_back": 90}'[m
+[32m+[m[32m*/[m

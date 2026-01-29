@@ -1,0 +1,133 @@
+# Raw data sources
+# Defines existing BigQuery tables that dbt will transform
+
+version: 2
+
+sources:
+  - name: raw
+    # BigQuery dataset containing raw data
+    database: your-project-id  # Replace with actual project ID
+    schema: taxi_data_raw       # BigQuery dataset
+    
+    # Source documentation
+    description: "NYC TLC Trip Record Data - Raw parquet files loaded to BigQuery"
+    
+    tables:
+      # Green taxi data 2019-2020
+      - name: green_tripdata
+        description: "Green taxi trip records (2019-2020)"
+        # Freshness check: alert if data > 24h old
+        freshness:
+          warn_after: {count: 24, period: hour}
+          error_after: {count: 48, period: hour}
+        loaded_at_field: lpep_pickup_datetime
+        
+        columns:
+          - name: vendorid
+            description: "Provider: 1=Creative Mobile, 2=VeriFone"
+          - name: lpep_pickup_datetime
+            description: "Pickup timestamp"
+          - name: lpep_dropoff_datetime
+            description: "Dropoff timestamp"
+          - name: passenger_count
+            description: "Number of passengers"
+          - name: trip_distance
+            description: "Trip distance in miles"
+          - name: pickup_longitude
+            description: "Pickup longitude"
+          - name: pickup_latitude
+            description: "Pickup latitude"
+          - name: ratecodeid
+            description: "Rate code: 1=Standard, 2=JFK, 3=Newark, 4=Nassau/Westchester, 5=Negotiated, 6=Group"
+          - name: store_and_fwd_flag
+            description: "Store and forward flag (Y/N)"
+          - name: pulocationid
+            description: "Pickup location ID (taxi zone)"
+          - name: dolocationid
+            description: "Dropoff location ID (taxi zone)"
+          - name: payment_type
+            description: "Payment method: 1=Credit card, 2=Cash, 3=No charge, 4=Dispute, 5=Unknown, 6=Voided"
+          - name: fare_amount
+            description: "Base fare"
+          - name: extra
+            description: "Extras and surcharges"
+          - name: mta_tax
+            description: "MTA tax"
+          - name: tip_amount
+            description: "Tip amount"
+          - name: tolls_amount
+            description: "Tolls amount"
+          - name: improvement_surcharge
+            description: "Improvement surcharge"
+          - name: total_amount
+            description: "Total amount charged"
+          - name: congestion_surcharge
+            description: "Congestion surcharge"
+      
+      # Yellow taxi data 2019-2020
+      - name: yellow_tripdata
+        description: "Yellow taxi trip records (2019-2020)"
+        freshness:
+          warn_after: {count: 24, period: hour}
+          error_after: {count: 48, period: hour}
+        loaded_at_field: tpep_pickup_datetime
+        
+        columns:
+          - name: vendorid
+            description: "Provider: 1=Creative Mobile, 2=VeriFone"
+          - name: tpep_pickup_datetime
+            description: "Pickup timestamp"
+          - name: tpep_dropoff_datetime
+            description: "Dropoff timestamp"
+          - name: passenger_count
+            description: "Number of passengers"
+          - name: trip_distance
+            description: "Trip distance in miles"
+          - name: ratecodeid
+            description: "Rate code"
+          - name: store_and_fwd_flag
+            description: "Store and forward flag (Y/N)"
+          - name: pulocationid
+            description: "Pickup location ID"
+          - name: dolocationid
+            description: "Dropoff location ID"
+          - name: payment_type
+            description: "Payment method"
+          - name: fare_amount
+            description: "Base fare"
+          - name: extra
+            description: "Extras and surcharges"
+          - name: mta_tax
+            description: "MTA tax"
+          - name: tip_amount
+            description: "Tip amount"
+          - name: tolls_amount
+            description: "Tolls amount"
+          - name: improvement_surcharge
+            description: "Improvement surcharge"
+          - name: total_amount
+            description: "Total amount charged"
+          - name: congestion_surcharge
+            description: "Congestion surcharge"
+      
+      # FHV data 2019
+      - name: fhv_tripdata
+        description: "For-Hire Vehicle trip records (2019)"
+        freshness:
+          warn_after: {count: 24, period: hour}
+          error_after: {count: 48, period: hour}
+        loaded_at_field: pickup_datetime
+        
+        columns:
+          - name: dispatching_base_num
+            description: "TLC Base License Number of dispatching base"
+          - name: pickup_datetime
+            description: "Pickup timestamp"
+          - name: dropoff_datetime
+            description: "Dropoff timestamp"
+          - name: pulocationid
+            description: "Pickup location ID"
+          - name: dolocationid
+            description: "Dropoff location ID"
+          - name: sr_flag
+            description: "Shared ride flag"

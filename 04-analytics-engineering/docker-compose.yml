@@ -20,7 +20,7 @@ services:
       # - GOOGLE_APPLICATION_CREDENTIALS=/workspace/credentials/gcp-key.json
     ports:
       # dbt docs serve
-      - "8080:8080"
+      - "38080:8080"      # was "8080:8080" to expose on host but conflict with other services (airflow)
     command: /bin/bash
     stdin_open: true
     tty: true

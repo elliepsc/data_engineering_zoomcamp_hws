@@ -1,0 +1,106 @@
+# Marts models tests and documentation
+
+version: 2
+
+models:
+  # Main fact table
+  - name: fct_trips
+    description: "All taxi trips (Green + Yellow) with calculated metrics"
+    data_tests:
+      # Custom test: check no duplicates (if we had a key)
+      - dbt_utils.expression_is_true:
+          expression: "pickup_datetime is not null"
+    
+    columns:
+      - name: pickup_datetime
+        description: "Trip start timestamp"
+        data_tests:
+          - not_null
+      
+      - name: pickup_location_id
+        description: "Pickup zone ID"
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_zones')
+              field: location_id
+      
+      - name: dropoff_location_id
+        description: "Dropoff zone ID"
+        data_tests:
+          - relationships:
+              to: ref('dim_zones')
+              field: location_id
+      
+      - name: service_type
+        description: "Taxi type (Green or Yellow)"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['Green', 'Yellow']
+      
+      - name: trip_duration_seconds
+        description: "Trip duration in seconds"
+      
+      - name: is_invalid_trip
+        description: "Flag for invalid trips (duration<=0, distance<=0, fare<=0)"
+        data_tests:
+          - not_null
+
+  # Zones dimension
+  - name: dim_zones
+    description: "NYC taxi zones lookup table"
+    columns:
+      - name: location_id
+        description: "Zone ID - Primary key"
+        data_tests:
+          - unique
+          - not_null
+      
+      - name: zone
+        description: "Zone name"
+        data_tests:
+          - not_null
+      
+      - name: borough
+        description: "NYC borough"
+
+  # Monthly aggregate by zone
+  - name: fct_monthly_zone_revenue
+    description: "Monthly aggregated trips and revenue by pickup zone"
+    columns:
+      - name: service_type
+        description: "Taxi type"
+        data_tests:
+          - not_null
+      
+      - name: pickup_year
+        description: "Pickup year"
+        data_tests:
+          - not_null
+      
+      - name: pickup_month
+        description: "Pickup month"
+        data_tests:
+          - not_null
+      
+      - name: pickup_location_id
+        description: "Pickup zone ID"
+        data_tests:
+          - not_null
+      
+      - name: total_monthly_trips
+        description: "Total trips in the month for this zone"
+        data_tests:
+          - not_null
+      
+      - name: revenue_monthly_total_amount
+        description: "Total revenue for the month in this zone"
+
+/*
+Notes:
+- unique: No duplicates
+- not_null: Required value
+- relationships: Check foreign keys (e.g., location_id exists in dim_zones)
+- dbt_utils requires dbt-utils package (to be installed)
+*/

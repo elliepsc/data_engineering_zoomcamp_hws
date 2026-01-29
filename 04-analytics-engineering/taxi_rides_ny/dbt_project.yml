@@ -1,0 +1,49 @@
+# dbt project configuration
+# Defines global behavior and default materialization
+
+name: 'taxi_rides_ny'
+version: '1.0.0'
+config-version: 2
+
+# Connection profile (defined in ~/.dbt/profiles.yml)
+profile: 'taxi_rides_ny'
+
+# Component paths
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+# Cleanup
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Model configuration by layer
+models:
+  taxi_rides_ny:
+    # Staging: lightweight views for performance and freshness
+    staging:
+      +materialized: view
+      +tags: ['staging']
+    
+    # Intermediate: views for flexibility
+    intermediate:
+      +materialized: view
+      +tags: ['intermediate']
+    
+    # Marts: tables for analytics performance
+    marts:
+      +materialized: table
+      +tags: ['marts']
+
+# Global variables accessible via {{ var('name') }}
+vars:
+  # Default analysis period
+  start_date: '2019-01-01'
+  end_date: '2020-12-31'
+  
+  # Payment type IDs
+  payment_type_values: [1, 2, 3, 4, 5, 6]

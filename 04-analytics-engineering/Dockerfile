@@ -24,8 +24,8 @@ RUN mkdir -p /root/.dbt
 ENV DBT_PROFILES_DIR=/workspace
 ENV PYTHONUNBUFFERED=1
 
-# Expose port for dbt docs (optional)
-EXPOSE 8080
+# Expose port for dbt docs (optional): changed to avoid conflict with Airflow. was 8080 previously
+EXPOSE 38080
 
 # Default command
 CMD ["/bin/bash"]

@@ -56,7 +56,8 @@ clean:
 # Data commands
 data:
 	@echo "📊 Downloading NYC taxi data..."
-	python download_data.py
+	docker-compose exec dbt python /workspace/download_data.py  
+	# previous: python download_data.py but run locally
 
 # dbt commands (run inside container)
 dbt-debug:
@@ -86,7 +87,7 @@ dbt-build:
 dbt-docs:
 	@echo "📚 Generating and serving dbt docs..."
 	docker-compose exec dbt dbt docs generate
-	docker-compose exec dbt dbt docs serve --port 8080
+	docker-compose exec dbt dbt docs serve --port 38080
 
 # Combined workflows
 setup: build up data

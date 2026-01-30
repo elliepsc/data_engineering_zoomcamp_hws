@@ -31,6 +31,17 @@ FROM fct_monthly_fare_percentiles
 WHERE year = 2020 AND month_number = 4
 ORDER BY service_type;
 
+--SELECT 
+--    service_type,
+--    p90_fare,
+--    p95_fare,
+--    p97_fare,
+--    trip_count
+--FROM fct_monthly_fare_percentiles
+--WHERE year = 2020 AND month_number = 4
+--ORDER BY service_type;
+
+
 -- ============================================================
 -- Top 5 Growing Zones - January 2020
 -- Demonstrates: LAG window function, MoM calculations
@@ -49,6 +60,19 @@ WHERE year = 2020
 ORDER BY mom_growth_pct DESC
 LIMIT 5;
 
+--SELECT 
+--    pickup_zone,
+--    service_type,
+--    revenue,
+--    prev_month_revenue,
+--    mom_growth_pct
+--FROM fct_monthly_revenue_growth
+--WHERE year = 2020 
+--  AND month_number = 1 
+--  AND mom_growth_pct IS NOT NULL
+--ORDER BY mom_growth_pct DESC
+--LIMIT 5;
+
 -- ============================================================
 -- Top 5 Declining Zones - January 2020
 -- Business insight: Which zones lost revenue
@@ -64,6 +88,17 @@ WHERE year = 2020
   AND mom_growth_pct IS NOT NULL
 ORDER BY mom_growth_pct ASC
 LIMIT 5;
+
+--SELECT 
+--    pickup_zone,
+--    service_type,
+--    mom_growth_pct
+--FROM fct_monthly_revenue_growth
+--WHERE year = 2020 
+--  AND month_number = 1 
+--  AND mom_growth_pct IS NOT NULL
+--ORDER BY mom_growth_pct ASC
+--LIMIT 5;
 
 -- ============================================================
 -- Revenue Volatility Analysis
@@ -92,6 +127,18 @@ FROM volatility
 ORDER BY revenue_volatility DESC
 LIMIT 10;
 
+--SELECT 
+--    pickup_zone,
+--    service_type,
+--    mom_growth_pct
+--FROM fct_monthly_revenue_growth
+--WHERE year = 2020 
+--  AND month_number = 1 
+--  AND mom_growth_pct IS NOT NULL
+--ORDER BY mom_growth_pct ASC
+--LIMIT 5;
+
+
 -- ============================================================
 -- Payment Method Distribution
 -- Demonstrates: dbt macros usage
@@ -105,6 +152,15 @@ SELECT
     ROUND(100.0 * trip_count / SUM(trip_count) OVER (), 2) as pct_of_trips
 FROM fct_payment_analysis
 ORDER BY trip_count DESC;
+
+--SELECT 
+--    payment_method,
+--    trip_count,
+--    total_revenue,
+ --   avg_revenue
+--FROM fct_payment_analysis
+--ORDER BY trip_count DESC
+--LIMIT 5;
 
 -- ============================================================
 -- Year-over-Year Comparison

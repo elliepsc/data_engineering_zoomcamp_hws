@@ -84,29 +84,6 @@ def main():
         
         print("")
         
-        # Payment Analysis (using macros)
-        print("Payment Method Distribution - All Time")
-        print("─" * 60)
-        result = conn.execute("""
-            SELECT 
-                payment_method,
-                trip_count,
-                total_revenue,
-                avg_revenue
-            FROM fct_payment_analysis
-            ORDER BY trip_count DESC
-            LIMIT 5
-        """).fetchall()
-        
-        print(f"{'Method':<15} {'Trips':>12} {'Revenue':>15} {'Avg':>10}")
-        print("─" * 60)
-        for row in result:
-            print(f"{row[0]:<15} {row[1]:>12,} ${row[2]:>14,.0f} ${row[3]:>9.2f}")
-        
-        print("")
-        print("Skills: dbt macros, Jinja templating, code reusability")
-        print("")
-        
         # Summary Stats
         print("Summary: All Models")
         print("─" * 60)

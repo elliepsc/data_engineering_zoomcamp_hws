@@ -104,3 +104,17 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
+# # bash:
+# make homework-2026
+# # or 
+# # docker: 
+# docker-compose exec dbt python3 /workspace/homework_queries_2026.py
+# # sql file:
+# docker-compose exec dbt duckdb taxi_rides_ny.duckdb < homework_2026.sql
+# # interactive sql:
+# docker-compose exec dbt bash
+# duckdb taxi_rides_ny.duckdb
+# # Copie-colle les queries depuis homework_2026.sql
+# # Créer analyses/homework_q3.sql puis
+# dbt compile --select homework_q3

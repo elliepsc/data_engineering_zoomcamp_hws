@@ -1,3 +1,5 @@
+Copier
+
 # Makefile for Module 4 - Analytics Engineering
 # Simplifies Docker and dbt commands
 
@@ -12,12 +14,12 @@ help:
 	@echo "  make up          - Start container in background"
 	@echo "  make down        - Stop and remove container"
 	@echo "  make shell       - Open bash shell in container"
-	@echo "  make clean       - Remove all containers and volumes"
+	@echo "  make clean       - Remove containers and volumes"
 	@echo "  make logs        - Show container logs"
 	@echo ""
 	@echo "📊 Data Commands:"
 	@echo "  make data        - Download NYC taxi data (60 parquet files)"
-	@echo "  make setup-dbt   - Install dbt deps + download seed file"
+	@echo "  make setup-dbt   - Install dbt deps + download seed file (if missing)"
 	@echo "  make download-seed - Force download seed file (overwrites existing)"
 	@echo "  make clean-data  - Remove downloaded data"
 	@echo ""
@@ -27,9 +29,9 @@ help:
 	@echo "  make dbt-seed    - Load seed files (taxi_zone_lookup)"
 	@echo "  make dbt-run     - Run all models"
 	@echo "  make dbt-test    - Run all tests"
-	@echo "  make dbt-build   - Run seed + run + test"
+	@echo "  make dbt-build   - Run seed + run + test (all-in-one)"
 	@echo "  make dbt-docs    - Generate and serve documentation"
-	@echo "  make dbt-clean   - Remove dbt artifacts"	
+	@echo "  make dbt-clean   - Remove dbt artifacts"
 	@echo ""
 	@echo "📝 Homework Commands:"
 	@echo "  make homework-2026      - Run base homework queries (Q1-Q6)"
@@ -41,13 +43,15 @@ help:
 	@echo "  make dbt-clean          - Remove dbt artifacts only"
 	@echo "  make clean              - Remove container + volumes"
 	@echo "  make clean-data         - Remove downloaded data"
-	@echo "  make reset              - Full cleanup + remove Docker image"
+	@echo "  make clean-all          - Remove data + artifacts (keeps Docker image)"
+	@echo "  make reset              - Reset containers (keeps data & image)"
+	@echo "  make reset-all          - FULL reset (removes everything inc. data)"
 	@echo ""
 	@echo "🛠️  Utility Commands:"
 	@echo "  make install-duckdb-cli - Install DuckDB CLI in container"
-	@echo ""	
+	@echo ""
 	@echo "🚀 Quick Start:"
-	@echo "  make build && make up && make data && make dbt-build"
+	@echo "  make build && make up && make data && make setup-dbt && make dbt-build"
 
 # Docker commands
 build:
@@ -76,8 +80,7 @@ clean:
 # Data commands
 data:
 	@echo "📊 Downloading NYC taxi data..."
-	docker-compose exec dbt python /workspace/download_data.py  
-	# previous: python download_data.py but run locally
+	python download_data.py
 
 # dbt commands (run inside container)
 dbt-debug:
@@ -154,19 +157,19 @@ homework-all: homework-2026 homework-2025
 
 verify-models:
 	@echo "✅ Verifying all models built..."
-	@docker-compose exec dbt python3 << 'EOF'
+	@docker-compose exec -T dbt python3 << 'EOF'
 	import duckdb
 	conn = duckdb.connect('/workspace/taxi_rides_ny/taxi_rides_ny.duckdb')
 	models = ['stg_green_tripdata', 'stg_yellow_tripdata', 'stg_fhv_tripdata', 
-			'int_trips_unioned', 'fct_trips', 'dim_zones', 
-			'fct_monthly_zone_revenue', 'fct_monthly_fare_percentiles', 
-			'fct_monthly_revenue_growth']
+	          'int_trips_unioned', 'fct_trips', 'dim_zones', 
+	          'fct_monthly_zone_revenue', 'fct_monthly_fare_percentiles', 
+	          'fct_monthly_revenue_growth']
 	for model in models:
-		try:
-			result = conn.execute(f"SELECT COUNT(*) FROM {model}").fetchone()
-			print(f"✅ {model:30} {result[0]:,} records")
-		except Exception as e:
-			print(f"❌ {model:30} ERROR")
+	    try:
+	        result = conn.execute(f"SELECT COUNT(*) FROM {model}").fetchone()
+	        print(f"✅ {model:30} {result[0]:,} records")
+	    except Exception as e:
+	        print(f"❌ {model:30} ERROR")
 	conn.close()
 	EOF
 
@@ -181,11 +184,32 @@ clean-data:
 	rm -rf data/
 	@echo "✅ Data removed!"
 
-reset: clean-data
-	@echo "🔄 Full reset..."
+clean-all: dbt-clean clean-data
+	@echo "🧹 Full cleanup (data + artifacts + seeds)..."
+	docker-compose exec dbt bash -c "rm -rf /workspace/taxi_rides_ny/seeds/*_README.md" 2>/dev/null || true
+	@echo "✅ Everything cleaned!"
+
+reset:
+	@echo "🔄 Reset (containers + volumes, keeps data & image)"
+	@echo "⚠️  Data files will be preserved"
 	docker-compose down -v
-	docker rmi 04-analytics-engineering-dbt || true
-	@echo "✅ Full reset complete! Run 'make build && make up && make data && make dbt-build'"
+	@echo ""
+	@echo "✅ Reset complete!"
+	@echo ""
+	@echo "Data kept in data/ directory"
+	@echo "To restart: make up && make dbt-build"
+
+reset-all: clean-all
+	@echo "🔄 FULL RESET (containers + image + data + everything)"
+	@echo "⚠️  This will DELETE all data files (~3GB)"
+	@echo ""
+	docker-compose down -v
+	docker rmi 04-analytics-engineering-dbt 2>/dev/null || true
+	@echo ""
+	@echo "✅ Full reset complete!"
+	@echo ""
+	@echo "To rebuild from scratch:"
+	@echo "  make build && make up && make data && make setup-dbt && make dbt-build"
 
 install-duckdb-cli:
 	@echo "📦 Installing DuckDB CLI..."

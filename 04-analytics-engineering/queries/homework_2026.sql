@@ -28,6 +28,14 @@ SELECT
     'Total records in fct_monthly_zone_revenue' as description
 FROM fct_monthly_zone_revenue;
 
+-- # Entre dans le container
+-- docker-compose exec dbt bash
+
+-- # Puis queries DuckDB
+-- duckdb taxi_rides_ny.duckdb
+
+-- SELECT COUNT(*) FROM fct_monthly_zone_revenue;
+
 -- ============================================================
 -- Q4: Best performing Green zone in 2020
 -- ============================================================
@@ -42,6 +50,16 @@ GROUP BY pickup_zone
 ORDER BY total_revenue DESC
 LIMIT 1;
 
+--SELECT 
+--    pickup_zone,
+--    SUM(revenue_monthly_total_amount) as total_revenue_2020
+--FROM fct_monthly_zone_revenue
+--WHERE service_type = 'Green'
+--  AND pickup_year = 2020
+--GROUP BY pickup_zone
+--ORDER BY total_revenue_2020 DESC
+--LIMIT 1;
+
 -- ============================================================
 -- Q5: Green taxi trips in October 2019
 -- ============================================================
@@ -54,6 +72,14 @@ WHERE service_type = 'Green'
   AND pickup_year = 2019 
   AND pickup_month = 10;
 
+--SELECT 
+--    SUM(total_monthly_trips) as total_trips_oct_2019
+--FROM fct_monthly_zone_revenue
+-- WHERE service_type = 'Green'
+--  AND pickup_year = 2019
+--  AND pickup_month = 10;
+
+
 -- ============================================================
 -- Q6: FHV records after filtering
 -- ============================================================
@@ -62,6 +88,8 @@ SELECT
     COUNT(*) as answer,
     'FHV records with dispatching_base_num NOT NULL' as description
 FROM stg_fhv_tripdata;
+
+--SELECT COUNT(*) FROM stg_fhv_tripdata;
 
 -- ============================================================
 -- Summary: All Answers in One Query

@@ -89,6 +89,8 @@ dbt-docs:
 	docker-compose exec dbt dbt docs generate
 	@echo "🌐 Starting dbt docs server on http://localhost:38080"
 	@echo "   (Container port 8080 → Host port 38080)"
+	@echo "⚠️  dbt will say localhost:8080 - IGNORE THIS"
+	@echo "!!!!!!! ✅ Use http://localhost:38080 instead !!!!!!"
 	@echo "   Press Ctrl+C to stop"
 	docker-compose exec dbt dbt docs serve --port 8080
 

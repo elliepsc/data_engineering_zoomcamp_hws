@@ -87,7 +87,10 @@ dbt-build:
 dbt-docs:
 	@echo "📚 Generating and serving dbt docs..."
 	docker-compose exec dbt dbt docs generate
-	docker-compose exec dbt dbt docs serve --port 38080
+	@echo "🌐 Starting dbt docs server on http://localhost:38080"
+	@echo "   (Container port 8080 → Host port 38080)"
+	@echo "   Press Ctrl+C to stop"
+	docker-compose exec dbt dbt docs serve --port 8080
 
 # Combined workflows
 setup: build up data

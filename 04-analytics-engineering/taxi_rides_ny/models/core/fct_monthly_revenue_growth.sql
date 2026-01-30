@@ -14,19 +14,29 @@ Skills demonstrated:
 - Financial analysis patterns
 */
 
-WITH monthly_revenue AS (
+WITH trips_with_zones AS (
+    SELECT 
+        t.*,
+        pickup_zone.zone AS pickup_zone,
+        pickup_zone.borough AS pickup_borough
+    FROM {{ ref('fct_trips') }} t
+    LEFT JOIN {{ ref('dim_zones') }} pickup_zone 
+        ON t.pickup_location_id = pickup_zone.location_id
+    WHERE t.is_invalid_trip = false
+        AND pickup_zone.zone IS NOT NULL
+),
+
+monthly_revenue AS (
     SELECT 
         service_type,
         pickup_zone,
         pickup_borough,
         DATE_TRUNC('month', pickup_datetime) AS month,
-        EXTRACT(YEAR FROM pickup_datetime) AS year,
-        EXTRACT(MONTH FROM pickup_datetime) AS month_number,
+        pickup_year AS year,
+        pickup_month AS month_number,
         SUM(total_amount) AS revenue,
         COUNT(*) AS trip_count
-    FROM {{ ref('fct_trips') }}
-    WHERE is_invalid_trip = false
-        AND pickup_zone IS NOT NULL
+    FROM trips_with_zones
     GROUP BY service_type, pickup_zone, pickup_borough, month, year, month_number
 )
 

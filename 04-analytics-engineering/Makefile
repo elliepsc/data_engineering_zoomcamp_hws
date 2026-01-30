@@ -154,21 +154,21 @@ homework-all: homework-2026 homework-2025
 
 verify-models:
 	@echo "✅ Verifying all models built..."
-	docker-compose exec dbt python3 << 'EOF'
-import duckdb
-conn = duckdb.connect('/workspace/taxi_rides_ny/taxi_rides_ny.duckdb')
-models = ['stg_green_tripdata', 'stg_yellow_tripdata', 'stg_fhv_tripdata', 
-          'int_trips_unioned', 'fct_trips', 'dim_zones', 
-          'fct_monthly_zone_revenue', 'fct_monthly_fare_percentiles', 
-          'fct_monthly_revenue_growth']
-for model in models:
-    try:
-        result = conn.execute(f"SELECT COUNT(*) FROM {model}").fetchone()
-        print(f"✅ {model:30} {result[0]:,} records")
-    except Exception as e:
-        print(f"❌ {model:30} ERROR")
-conn.close()
-EOF
+	@docker-compose exec dbt python3 << 'EOF'
+	import duckdb
+	conn = duckdb.connect('/workspace/taxi_rides_ny/taxi_rides_ny.duckdb')
+	models = ['stg_green_tripdata', 'stg_yellow_tripdata', 'stg_fhv_tripdata', 
+			'int_trips_unioned', 'fct_trips', 'dim_zones', 
+			'fct_monthly_zone_revenue', 'fct_monthly_fare_percentiles', 
+			'fct_monthly_revenue_growth']
+	for model in models:
+		try:
+			result = conn.execute(f"SELECT COUNT(*) FROM {model}").fetchone()
+			print(f"✅ {model:30} {result[0]:,} records")
+		except Exception as e:
+			print(f"❌ {model:30} ERROR")
+	conn.close()
+	EOF
 
 # Cleaning
 dbt-clean:

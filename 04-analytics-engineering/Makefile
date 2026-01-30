@@ -13,9 +13,13 @@ help:
 	@echo "  make down        - Stop and remove container"
 	@echo "  make shell       - Open bash shell in container"
 	@echo "  make clean       - Remove all containers and volumes"
+	@echo "  make logs        - Show container logs"
 	@echo ""
 	@echo "📊 Data Commands:"
 	@echo "  make data        - Download NYC taxi data (60 parquet files)"
+	@echo "  make setup-dbt   - Install dbt deps + download seed file"
+	@echo "  make download-seed - Force download seed file (overwrites existing)"
+	@echo "  make clean-data  - Remove downloaded data"
 	@echo ""
 	@echo "🔧 dbt Commands:"
 	@echo "  make dbt-debug   - Test dbt connection"
@@ -25,7 +29,23 @@ help:
 	@echo "  make dbt-test    - Run all tests"
 	@echo "  make dbt-build   - Run seed + run + test"
 	@echo "  make dbt-docs    - Generate and serve documentation"
+	@echo "  make dbt-clean   - Remove dbt artifacts"	
 	@echo ""
+	@echo "📝 Homework Commands:"
+	@echo "  make homework-2026      - Run base homework queries (Q1-Q6)"
+	@echo "  make homework-2025      - Run advanced analytics (2025 level)"
+	@echo "  make homework-all       - Run both"
+	@echo "  make verify-models      - Check all models are built"
+	@echo ""
+	@echo "🧹 Cleanup Commands:"
+	@echo "  make dbt-clean          - Remove dbt artifacts only"
+	@echo "  make clean              - Remove container + volumes"
+	@echo "  make clean-data         - Remove downloaded data"
+	@echo "  make reset              - Full cleanup + remove Docker image"
+	@echo ""
+	@echo "🛠️  Utility Commands:"
+	@echo "  make install-duckdb-cli - Install DuckDB CLI in container"
+	@echo ""	
 	@echo "🚀 Quick Start:"
 	@echo "  make build && make up && make data && make dbt-build"
 
@@ -98,8 +118,79 @@ dbt-docs:
 setup: build up data
 	@echo "✅ Setup complete! Ready to run dbt commands."
 
+setup-dbt:
+	@echo "🔧 Setting up dbt..."
+	docker-compose exec dbt dbt deps
+	@echo "📥 Checking taxi zone lookup seed file..."
+	@docker-compose exec dbt bash -c '\
+		if [ -f /workspace/taxi_rides_ny/seeds/taxi_zone_lookup.csv ]; then \
+			echo "✅ Seed file already exists, skipping download"; \
+		else \
+			echo "📥 Downloading taxi_zone_lookup.csv..."; \
+			cd /workspace/taxi_rides_ny/seeds && \
+			wget -q -O taxi_zone_lookup.csv https://github.com/DataTalksClub/nyc-tlc-data/releases/download/misc/taxi_zone_lookup.csv && \
+			echo "✅ Seed file downloaded"; \
+		fi'
+	@echo "✅ dbt setup complete!"
+
+download-seed:
+	@echo "📥 Downloading taxi zone lookup seed file (forced)..."
+	docker-compose exec dbt bash -c "cd /workspace/taxi_rides_ny/seeds && wget -q -O taxi_zone_lookup.csv https://github.com/DataTalksClub/nyc-tlc-data/releases/download/misc/taxi_zone_lookup.csv"
+	@echo "✅ Seed file downloaded!"
+
 full-build: dbt-deps dbt-seed dbt-run dbt-test
 	@echo "✅ Full dbt build complete!"
+
+# Homework queries
+homework-2026:
+	@echo "📝 Running homework 2026 queries..."
+	docker-compose exec dbt python3 /workspace/homework_queries_2026.py
+
+homework-2025:
+	@echo "🎯 Running advanced analytics (2025 level)..."
+	docker-compose exec dbt python3 /workspace/homework_queries_2025.py
+
+homework-all: homework-2026 homework-2025
+
+verify-models:
+	@echo "✅ Verifying all models built..."
+	docker-compose exec dbt python3 << 'EOF'
+import duckdb
+conn = duckdb.connect('/workspace/taxi_rides_ny/taxi_rides_ny.duckdb')
+models = ['stg_green_tripdata', 'stg_yellow_tripdata', 'stg_fhv_tripdata', 
+          'int_trips_unioned', 'fct_trips', 'dim_zones', 
+          'fct_monthly_zone_revenue', 'fct_monthly_fare_percentiles', 
+          'fct_monthly_revenue_growth']
+for model in models:
+    try:
+        result = conn.execute(f"SELECT COUNT(*) FROM {model}").fetchone()
+        print(f"✅ {model:30} {result[0]:,} records")
+    except Exception as e:
+        print(f"❌ {model:30} ERROR")
+conn.close()
+EOF
+
+# Cleaning
+dbt-clean:
+	@echo "🧹 Cleaning dbt artifacts..."
+	docker-compose exec dbt bash -c "cd /workspace/taxi_rides_ny && rm -rf target/ dbt_packages/ logs/ *.duckdb*"
+	@echo "✅ dbt artifacts cleaned!"
+
+clean-data:
+	@echo "🧹 Removing downloaded data..."
+	rm -rf data/
+	@echo "✅ Data removed!"
+
+reset: clean-data
+	@echo "🔄 Full reset..."
+	docker-compose down -v
+	docker rmi 04-analytics-engineering-dbt || true
+	@echo "✅ Full reset complete! Run 'make build && make up && make data && make dbt-build'"
+
+install-duckdb-cli:
+	@echo "📦 Installing DuckDB CLI..."
+	docker-compose exec dbt bash -c "cd /tmp && wget -q https://github.com/duckdb/duckdb/releases/download/v1.0.0/duckdb_cli-linux-amd64.zip && unzip -q duckdb_cli-linux-amd64.zip && mv duckdb /usr/local/bin/ && rm duckdb_cli-linux-amd64.zip"
+	@echo "✅ DuckDB CLI installed! Run: make shell && duckdb taxi_rides_ny.duckdb"
 
 # Alternative: run dbt commands locally (without Docker)
 local-run:

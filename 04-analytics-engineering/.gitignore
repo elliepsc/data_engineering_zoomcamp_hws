@@ -59,4 +59,8 @@ profiles.yml
 .user.yml
 documentation/
 
-
+taxi_rides_ny/seeds/*_README.md
+taxi_rides_ny/seeds/*.html
+taxi_rides_ny/seeds/*_README.md
+taxi_rides_ny/seeds/*.csv
+taxi_rides_ny/seeds/*.parquet

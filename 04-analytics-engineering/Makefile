@@ -144,11 +144,11 @@ full-build: dbt-deps dbt-seed dbt-run dbt-test
 # Homework queries
 homework-2026:
 	@echo "📝 Running homework 2026 queries..."
-	docker-compose exec dbt python3 /workspace/homework_queries_2026.py
+	docker-compose exec dbt python3 /workspace/queries/homework_queries_2026.py
 
 homework-2025:
 	@echo "🎯 Running advanced analytics (2025 level)..."
-	docker-compose exec dbt python3 /workspace/homework_queries_2025.py
+	docker-compose exec dbt python3 /workspace/queries/homework_queries_2025.py
 
 homework-all: homework-2026 homework-2025
 

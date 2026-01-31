@@ -1,5 +1,3 @@
-Copier
-
 # Makefile for Module 4 - Analytics Engineering
 # Simplifies Docker and dbt commands
 

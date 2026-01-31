@@ -212,9 +212,23 @@ reset-all: clean-all
 	@echo "  make build && make up && make data && make setup-dbt && make dbt-build"
 
 install-duckdb-cli:
+# 	@echo "📦 Installing DuckDB CLI..."
+# 	docker-compose exec dbt bash -c "cd /tmp && wget -q https://github.com/duckdb/duckdb/releases/download/v1.0.0/duckdb_cli-linux-amd64.zip && unzip -q duckdb_cli-linux-amd64.zip && mv duckdb /usr/local/bin/ && rm duckdb_cli-linux-amd64.zip"
+# 	@echo "✅ DuckDB CLI installed! Run: make shell && duckdb taxi_rides_ny.duckdb"
+install-duckdb-cli:
 	@echo "📦 Installing DuckDB CLI..."
-	docker-compose exec dbt bash -c "cd /tmp && wget -q https://github.com/duckdb/duckdb/releases/download/v1.0.0/duckdb_cli-linux-amd64.zip && unzip -q duckdb_cli-linux-amd64.zip && mv duckdb /usr/local/bin/ && rm duckdb_cli-linux-amd64.zip"
-	@echo "✅ DuckDB CLI installed! Run: make shell && duckdb taxi_rides_ny.duckdb"
+	@docker-compose exec dbt bash -c '\
+		apt-get update -qq && \
+		apt-get install -y -qq unzip && \
+		cd /tmp && \
+		wget -q https://github.com/duckdb/duckdb/releases/download/v1.0.0/duckdb_cli-linux-amd64.zip && \
+		unzip -q duckdb_cli-linux-amd64.zip && \
+		mv duckdb /usr/local/bin/ && \
+		rm duckdb_cli-linux-amd64.zip && \
+		echo "✅ DuckDB CLI installed!"'
+	@echo ""
+	@echo "To use: docker-compose exec dbt bash"
+	@echo "        duckdb taxi_rides_ny.duckdb"
 
 # Alternative: run dbt commands locally (without Docker)
 local-run:

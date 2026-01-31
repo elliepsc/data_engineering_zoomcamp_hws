@@ -149,6 +149,10 @@ homework-2026:
 	@echo "📝 Running homework 2026 queries..."
 	docker-compose exec dbt python3 /workspace/queries/homework_queries_2026.py
 
+homework-2026-table:
+	@echo "📊 Running homework 2026 queries (with tables)..."
+	docker-compose exec dbt python3 /workspace/queries/homework_queries_2026_tabulate.py
+
 homework-2025:
 	@echo "🎯 Running advanced analytics (2025 level)..."
 	docker-compose exec dbt python3 /workspace/queries/homework_queries_2025.py

@@ -1,20 +1,20 @@
 # Data Engineering Zoomcamp 2026 Homeworks
-**Student:** Ellie Pascaud  
-**Course:** Data Engineering Zoomcamp 2026  
-**Database:** NYC taxi dataset  
+**Student:** Ellie Pascaud
+**Course:** Data Engineering Zoomcamp 2026
+**Database:** NYC taxi dataset
 
 
 ## Project Structure
 The project follows the Zoomcamp and is organized by module, covering the full data engineering lifecycle: ingestion, orchestration, warehousing, and analytics.
 
 ## Course Overview
-- **Module 1:** Docker & Terraform   
+- **Module 1:** Docker & Terraform
     Infrastructure provisioning with Terraform and containerized environments using Docker.
-- **Module 2:** Workflow orchestration   
-    Building and scheduling data pipelines with Apache Airflow.   
-- **Module 3:** Data Warehouse (with GCP)   
+- **Module 2:** Workflow orchestration
+    Building and scheduling data pipelines with Apache Airflow.
+- **Module 3:** Data Warehouse (with GCP)
     Cloud-based data warehousing using Google Cloud Storage and BigQuery.
-- **Module 4:** Analytics engineering (with Dbt)  
+- **Module 4:** Analytics engineering (with Dbt)
     Data transformations, testing, and modeling using dbt.
 
 ## 📊 Progress Tracker
@@ -23,8 +23,8 @@ The project follows the Zoomcamp and is organized by module, covering the full d
 |--------|--------|--------|------------|
 | **1** | Docker & Terraform | ✅ Complete | Jan 2026 |
 | **2** | Workflow Orchestration | ✅ Complete| Jan 2026 |
-| **3** | Data Warehouse | ⏳ Not Started | - |
-| **4** | Analytics Engineering | 🔜 Started | - |
+| **3** | Data Warehouse | 🔜 Started | - |
+| **4** | Analytics Engineering | ✅ Complete |  Jan 2026 |
 | **5** | Batch Processing | ⏳ Not Started | - |
 | **6** | Streaming | ⏳ Not Started | - |
 

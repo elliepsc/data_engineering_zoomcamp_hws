@@ -142,7 +142,7 @@ bq query < setup_bigquery.sql
 ### Question 2: Data Read Estimation
 **Query:** Count distinct PULocationIDs on both external and materialized tables
 **Answer:**
-- External Table: ~2.14 GB estimated bytes
+- External Table: ~0 B estimated bytes
 - Materialized Table: ~155 MB estimated bytes
 
 **Key Learning:** Materialized tables in BigQuery use optimized columnar storage format, significantly reducing bytes scanned.
@@ -157,7 +157,7 @@ bq query < setup_bigquery.sql
 
 ### Question 4: Zero Fare Trips
 **Query:** Count records with fare_amount = 0
-**Answer:** [Your result here] records
+**Answer:** 8,333
 
 ### Question 5: Partitioning and Clustering Strategy
 **Question:** Best optimization for queries filtering on tpep_dropoff_datetime and ordering by VendorID?

@@ -1,0 +1,30 @@
+# Google Cloud credentials - NEVER COMMIT
+*.json
+gcs.json
+credentials.json
+key.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+
+# Virtual environment
+venv/
+.venv/
+
+# Parquet files (trop gros pour git)
+*.parquet
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp

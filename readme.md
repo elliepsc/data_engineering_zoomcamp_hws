@@ -16,6 +16,8 @@ The project follows the Zoomcamp and is organized by module, covering the full d
     Cloud-based data warehousing using Google Cloud Storage and BigQuery.
 - **Module 4:** Analytics engineering (with Dbt)
     Data transformations, testing, and modeling using dbt.
+- **Module 5:** Data Platforms (with Airflow & GCP)
+    Data cycle: ingestion, transformation, orchestration, quality, management (lineage, documentation)
 
 ## 📊 Progress Tracker
 
@@ -23,10 +25,11 @@ The project follows the Zoomcamp and is organized by module, covering the full d
 |--------|--------|--------|------------|
 | **1** | Docker & Terraform | ✅ Complete | Jan 2026 |
 | **2** | Workflow Orchestration | ✅ Complete| Jan 2026 |
-| **3** | Data Warehouse | 🔜 Started | - |
-| **4** | Analytics Engineering | ✅ Complete |  Jan 2026 |
-| **5** | Batch Processing | ⏳ Not Started | - |
-| **6** | Streaming | ⏳ Not Started | - |
+| **3** | Data Warehouse | ✅ Complete | Feb 2026 |
+| **4** | Analytics Engineering | ✅ Complete |  Feb 2026 |
+| **5** | Data Platforms |🔜 Started |  - |
+| **6** | Batch Processing | ⏳ Not Started | - |
+| **7** | Streaming | ⏳ Not Started | - |
 
 
 ## Dataset

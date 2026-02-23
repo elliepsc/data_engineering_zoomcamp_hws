@@ -1,0 +1,27 @@
+# ============================================
+# Airflow Data Platform - Python Dependencies
+# ============================================
+
+# GCP Integration
+google-cloud-bigquery==3.14.1
+google-cloud-storage==2.14.0
+google-auth==2.25.2
+
+# Airflow Providers
+apache-airflow-providers-google==10.13.1
+
+# Data Processing
+pandas==2.1.4
+pyarrow==14.0.2
+
+# Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+
+# Code Quality
+black==23.12.1
+flake8==7.0.0
+isort==5.13.2
+
+# Utilities
+python-dotenv==1.0.0

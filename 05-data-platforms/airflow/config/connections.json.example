@@ -1,0 +1,49 @@
+{
+  "connections": {
+    "google_cloud_default": {
+      "conn_type": "google_cloud_platform",
+      "description": "Default GCP connection for BigQuery and GCS",
+      "extra": {
+        "project": "${GCP_PROJECT_ID}",
+        "key_path": "/opt/airflow/config/gcp-credentials.json",
+        "scope": "https://www.googleapis.com/auth/cloud-platform"
+      }
+    },
+    "bigquery_default": {
+      "conn_type": "google_cloud_platform",
+      "description": "BigQuery connection",
+      "extra": {
+        "project": "${GCP_PROJECT_ID}",
+        "key_path": "/opt/airflow/config/gcp-credentials.json",
+        "scope": "https://www.googleapis.com/auth/bigquery"
+      }
+    },
+    "gcs_default": {
+      "conn_type": "google_cloud_platform",
+      "description": "Google Cloud Storage connection",
+      "extra": {
+        "project": "${GCP_PROJECT_ID}",
+        "key_path": "/opt/airflow/config/gcp-credentials.json",
+        "scope": "https://www.googleapis.com/auth/devstorage.read_write"
+      }
+    },
+    "slack_webhook": {
+      "conn_type": "http",
+      "description": "Slack webhook for alerting (optional)",
+      "host": "https://hooks.slack.com/services/",
+      "extra": {
+        "webhook_token": "YOUR_WEBHOOK_TOKEN"
+      }
+    }
+  },
+  "variables": {
+    "gcp_project_id": "${GCP_PROJECT_ID}",
+    "gcs_bucket": "${GCS_BUCKET_NAME}",
+    "bq_dataset_raw": "${BQ_DATASET_RAW}",
+    "bq_dataset_staging": "${BQ_DATASET_STAGING}",
+    "bq_dataset_analytics": "${BQ_DATASET_ANALYTICS}",
+    "data_start_date": "${DATA_START_DATE}",
+    "data_end_date": "${DATA_END_DATE}",
+    "taxi_type": "${TAXI_TYPE}"
+  }
+}

@@ -92,21 +92,21 @@ make dbt-docs       # View docs at http://localhost:38080
 
 ## 📝 Homework Answers (2026)
 
-### Q1: dbt Lineage
+### Q1: dbt Lineage and Execution
 **Question**: If you run `dbt run --select int_trips_unioned`, what models will be built?
 
-**Answer**: **A** - stg_green_tripdata, stg_yellow_tripdata, and int_trips_unioned
+**Answer**: **C** - int_trips_unioned only
 
-**Explanation**: dbt builds upstream dependencies by default. The `--select` flag builds the specified model plus all models it depends on via `{{ ref() }}`.
+**Explanation**: dbt builds upstream dependencies by default. The `--select` flag builds the specified model.
 
 ---
 
 ### Q2: dbt Tests Behavior
-**Question**: Test `accepted_values: [1,2,3,4,5]` exists on payment_type. New value 6 appears. What happens?
+**Question**: If you run `dbt run --select int_trips_unioned`, what models will be built?
 
-**Answer**: **B** - dbt will fail the test, returning a non-zero exit code
+**Answer**: **C** - int_trips_unioned only
 
-**Explanation**: The `accepted_values` test fails when it encounters values not in the specified list, causing dbt to exit with a non-zero code.
+**Explanation**: The `--select` flag builds ONLY the specified model. To include upstream dependencies, use `dbt run --select +int_trips_unioned` (with the `+` prefix).
 
 ---
 
@@ -154,7 +154,7 @@ WHERE service_type = 'Green'
   AND pickup_month = 10;
 ```
 
-**Answer**: **461,349 trips**
+**Answer**: **384,624 trips**
 
 ---
 
@@ -184,7 +184,7 @@ Uses `PERCENTILE_CONT` window function for outlier detection:
 
 ---
 
-### Top 5 Growing Zones - January 2020 (MoM %)
+### Top 5 Growing Zones - January 2020 (MoM %) plus all models it depends on via `{{ ref() }}`
 Uses `LAG` window function for month-over-month calculations:
 
 1. **Breezy Point/Fort Tilden/Riis Beach** (Yellow) - +675.1%

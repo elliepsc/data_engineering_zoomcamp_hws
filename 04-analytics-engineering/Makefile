@@ -78,7 +78,9 @@ clean:
 # Data commands
 data:
 	@echo "📊 Downloading NYC taxi data..."
-	python download_data.py
+# 	python download_data.py
+	docker-compose exec dbt python3 /workspace/download_data.py
+
 
 # dbt commands (run inside container)
 dbt-debug:
@@ -162,9 +164,9 @@ verify-models:
 	@docker-compose exec -T dbt python3 << 'EOF'
 	import duckdb
 	conn = duckdb.connect('/workspace/taxi_rides_ny/taxi_rides_ny.duckdb')
-	models = ['stg_green_tripdata', 'stg_yellow_tripdata', 'stg_fhv_tripdata', 
-	          'int_trips_unioned', 'fct_trips', 'dim_zones', 
-	          'fct_monthly_zone_revenue', 'fct_monthly_fare_percentiles', 
+	models = ['stg_green_tripdata', 'stg_yellow_tripdata', 'stg_fhv_tripdata',
+	          'int_trips_unioned', 'fct_trips', 'dim_zones',
+	          'fct_monthly_zone_revenue', 'fct_monthly_fare_percentiles',
 	          'fct_monthly_revenue_growth']
 	for model in models:
 	    try:

@@ -65,12 +65,12 @@ http://localhost:4040
 
 | # | Question | Answer |
 |---|----------|--------|
-| 1 | Spark version | *run spark.version* |
+| 1 | Spark version | *3.5.0* |
 | 2 | Average parquet file size after repartition(4) | ~25 MB |
-| 3 | Trips starting on November 15th | *run query* |
-| 4 | Longest trip in hours | *run query* |
+| 3 | Trips starting on November 15th | *162,604* |
+| 4 | Longest trip in hours | *90.6 hours* |
 | 5 | Spark UI port | 4040 |
-| 6 | Least frequent pickup zone | *run query* |
+| 6 | Least frequent pickup zone | *Governor's Island/Ellis Island/Liberty Island* |
 
 ## Key Concepts Practiced
 

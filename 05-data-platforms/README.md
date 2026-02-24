@@ -1,5 +1,8 @@
 # Airflow Data Platform - NYC Taxi Analytics
 
+Warning: I do not follow instructions from the zoomcamp.: I do not use Bruin.
+I work on data platform mixing ETL(dbt) & airflow
+
 > **Production-ready data platform demonstrating modern data engineering patterns with Apache Airflow, dbt, and BigQuery.**
 
 Built for the [DataTalks.Club Data Engineering Zoomcamp 2026](https://github.com/DataTalksClub/data-engineering-zoomcamp) - Module 5: Data Platforms
@@ -305,7 +308,7 @@ upload_to_gcs(
 
 **What Recruiters See**:
 
-❌ **Without patterns**: "This person copies from tutorials"  
+❌ **Without patterns**: "This person copies from tutorials"
 ✅ **With patterns**: "This person writes production code"
 
 ---
@@ -436,7 +439,7 @@ docker exec -it airflow-scheduler \
 
 ### DAG 1: Incremental Data Ingestion
 
-**Schedule**: Monthly (`@monthly`)  
+**Schedule**: Monthly (`@monthly`)
 **Catchup**: Enabled (supports backfill)
 
 **Tasks**:
@@ -454,7 +457,7 @@ docker exec -it airflow-scheduler \
 
 ### DAG 2: dbt Transformations
 
-**Schedule**: Monthly (matches ingestion)  
+**Schedule**: Monthly (matches ingestion)
 **Dependencies**: Waits for DAG 1 via `ExternalTaskSensor`
 
 **Tasks**:
@@ -473,7 +476,7 @@ docker exec -it airflow-scheduler \
 
 ### DAG 3: Data Quality Monitoring
 
-**Schedule**: Monthly  
+**Schedule**: Monthly
 **Dependencies**: Waits for DAG 1
 
 **Checks**:

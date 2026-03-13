@@ -17,11 +17,12 @@ psycopg2-binary==2.9.9
 pandas==2.2.0
 numpy<2.0  # CRITICAL: pandas 2.2.0 requires numpy <2.0
 
-# HTTP requests (for downloading CSV files)  
+# HTTP requests (for downloading CSV files)
 requests==2.31.0
 
 # Database ORM
 sqlalchemy==2.0.25  # Using version from main project (compatible with Airflow 2.10.0)
+psycopg2-binary==2.9.9
 
 # Jupyter notebook (for data validation)
 jupyter==1.0.0

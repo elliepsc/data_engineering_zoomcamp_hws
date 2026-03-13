@@ -7,10 +7,19 @@ SELECT COUNT(*) as total_yellow_2020
 FROM yellow_taxi_trips
 WHERE year = 2020;
 
+{# docker exec airflow-postgres psql -U airflow -d ny_taxi -c "
+SELECT COUNT(*) as yellow_2020_total FROM yellow_taxi_trips WHERE year=2020;
+" #}
+
+
 -- Q4: Total rows Green 2020 (all months)
 SELECT COUNT(*) as total_green_2020
 FROM green_taxi_trips
 WHERE year = 2020;
+
+{# docker exec airflow-postgres psql -U airflow -d ny_taxi -c "
+SELECT COUNT(*) as green_2020_total FROM green_taxi_trips WHERE year=2020;
+" #}
 
 -- Q5: Total rows Yellow March 2021
 SELECT COUNT(*) as yellow_march_2021

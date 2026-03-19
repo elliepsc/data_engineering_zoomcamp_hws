@@ -34,27 +34,27 @@ Data Engineering Zoomcamp 2026 | Green Taxi Trip Data — October 2025
     └── Dockerfile.flink
 ```
 
-> **Important**: Les jobs Flink doivent être dans `src/job/hw/` car ce dossier est monté dans le container via le volume `./src/:/opt/src`. Toute modification doit se faire dans `src/job/hw/`, pas ailleurs.
+> **Important**: Flink jobs must be placed in `src/job/hw/` — this directory is mounted into the Flink containers via the volume `./src/:/opt/src`. All edits must be made there, not in any other location.
 
 ## Setup
 
-### 1. Ports — conflits à éviter
+### 1. Port conflicts
 
-Le `docker-compose.yml` original utilise les ports 8081 et 8082, potentiellement occupés par d'autres services. Modifie avant de lancer :
+The original `docker-compose.yml` uses ports 8081 and 8082, which may conflict with other running services. Update before starting:
 
 ```yaml
 redpanda:
   ports:
-    - 8085:8082    # était 8082:8082
+    - 8085:8082    # was 8082:8082
 
 jobmanager:
   ports:
-    - "8083:8081"  # était 8081:8081
+    - "8083:8081"  # was 8081:8081
 ```
 
-Le Flink UI sera accessible sur http://localhost:8083
+The Flink UI will be available at http://localhost:8083
 
-### 2. Environnement Python
+### 2. Python environment
 
 ```bash
 cd 07-streaming
@@ -63,7 +63,7 @@ source .venv/bin/activate
 pip install kafka-python pandas pyarrow
 ```
 
-### 3. Lancer l'infrastructure
+### 3. Start the infrastructure
 
 ```bash
 cd workshop
@@ -72,26 +72,26 @@ docker compose up -d
 docker compose ps
 ```
 
-Services démarrés :
-- Redpanda (Kafka) : `localhost:9092`
-- Flink Job Manager : `http://localhost:8083`
-- PostgreSQL : `localhost:5432`
+Services started:
+- Redpanda (Kafka): `localhost:9092`
+- Flink Job Manager: `http://localhost:8083`
+- PostgreSQL: `localhost:5432`
 
-### 4. Télécharger les données
+### 4. Download the dataset
 
 ```bash
 wget https://d37ci6vzurychx.cloudfront.net/trip-data/green_tripdata_2025-10.parquet -P data/
 ```
 
-Dataset : **49,416 lignes** de courses Green Taxi octobre 2025.
+Dataset: **49,416 rows** of Green Taxi trips from October 2025.
 
-### 5. Créer le topic Redpanda
+### 5. Create the Redpanda topic
 
 ```bash
 docker exec -it workshop-redpanda-1 rpk topic create green-trips
 ```
 
-### 6. Créer les tables PostgreSQL
+### 6. Create PostgreSQL tables
 
 ```bash
 docker exec -it workshop-postgres-1 psql -U postgres -d postgres -c "
@@ -117,21 +117,21 @@ CREATE TABLE tumbling_window_tips (
 
 ---
 
-## Questions 1–3 : Kafka Producer/Consumer
+## Questions 1–3: Kafka Producer/Consumer
 
-### Q1 — Version Redpanda
+### Q1 — Redpanda version
 
 ```bash
 docker exec -it workshop-redpanda-1 rpk version
 ```
 
-**Réponse : v25.3.9** ✅
+**Answer: v25.3.9** ✅
 
-### Q2 — Envoi des données
+### Q2 — Sending data to Redpanda
 
-Le producer (`src/job/hw/producer.py`) lit le parquet et envoie chaque ligne au topic `green-trips`.
+The producer (`src/job/hw/producer.py`) reads the parquet file and sends each row to the `green-trips` topic.
 
-**Fix important** : Le dataset contient des valeurs `NaN` dans `passenger_count`. Flink ne supporte pas `NaN` en JSON. On remplace par `None` (sérialisé en `null`) avant l'envoi :
+**Important fix**: The dataset contains `NaN` values in `passenger_count`. Flink cannot parse `NaN` in JSON. Replace with `None` (serialized as `null`) before sending:
 
 ```python
 df = df.where(pd.notnull(df), None)
@@ -141,51 +141,51 @@ df = df.where(pd.notnull(df), None)
 python3 src/job/hw/producer.py
 ```
 
-**Réponse : 10 seconds** ✅ (~6-8s en pratique, dans la tranche "10 seconds")
+**Answer: 10 seconds** ✅ (~6-8s in practice, falls in the "10 seconds" range)
 
-### Q3 — Trips > 5km
+### Q3 — Trips with distance > 5km
 
 ```bash
 python3 src/job/hw/consumer.py
 ```
 
-**Réponse : 8506** ✅
+**Answer: 8506** ✅
 
 ---
 
-## Questions 4–6 : PyFlink
+## Questions 4–6: PyFlink
 
-### Fix commun à tous les jobs
+### Fix applied to all Flink jobs
 
-Flink 2.x ne supporte pas `NaN` en JSON même avec le fix producer (anciens messages dans le topic). Tous les jobs source incluent :
+Even with the producer fix, older messages in the topic may still contain `NaN`. All job source DDLs include:
 
 ```python
 'json.ignore-parse-errors' = 'true'
 ```
 
-### Commande générique pour soumettre un job
+### Generic command to submit a Flink job
 
 ```bash
 docker exec -it workshop-jobmanager-1 flink run -py /opt/src/job/hw/<job_file>.py
 ```
 
-### Reset propre entre les jobs
+### Clean reset between jobs
 
 ```bash
-# Supprimer et recréer le topic (évite les doublons)
+# Delete and recreate the topic to avoid duplicates
 docker exec -it workshop-redpanda-1 rpk topic delete green-trips
 docker exec -it workshop-redpanda-1 rpk topic create green-trips
 python3 src/job/hw/producer.py
 
-# Vider la table PostgreSQL concernée
+# Truncate the relevant PostgreSQL table
 docker exec -it workshop-postgres-1 psql -U postgres -d postgres -c "TRUNCATE <table>;"
 ```
 
-### Q4 — Tumbling Window 5 min par PULocationID
+### Q4 — Tumbling window (5 min) by PULocationID
 
-Job : `src/job/hw/job_q4_tumbling_pickup.py`
+Job: `src/job/hw/job_q4_tumbling_pickup.py`
 
-Fenêtre glissante de 5 minutes, compte les trips par `PULocationID`.
+5-minute tumbling window counting trips per `PULocationID`.
 
 ```bash
 docker exec -it workshop-jobmanager-1 flink run -py /opt/src/job/hw/job_q4_tumbling_pickup.py
@@ -206,19 +206,19 @@ LIMIT 3;
            74 |        13
 ```
 
-**Réponse : 74** ✅
+**Answer: 74** ✅
 
-### Q5 — Session Window par PULocationID
+### Q5 — Session window by PULocationID
 
-Job : `src/job/hw/job_q5_session_window.py`
+Job: `src/job/hw/job_q5_session_window.py`
 
-Fenêtre de session avec gap de 5 minutes, partitionnée par `PULocationID`.
+Session window with a 5-minute gap, partitioned by `PULocationID`.
 
-#### ⚠️ Piège : PARTITION BY obligatoire
+#### ⚠️ Key lesson: PARTITION BY is required
 
-**Sans `PARTITION BY`** : Flink crée une seule session globale — dès qu'un event arrive n'importe où, la fenêtre reste ouverte pour toutes les locations. Résultat : sessions aberrantes avec 400+ trips.
+**Without `PARTITION BY`**: Flink creates a single global session across all locations — any incoming event from any location keeps the window open. This produces a single massive session with hundreds of trips (401 in our case), which does not match any answer choice.
 
-**Avec `PARTITION BY PULocationID`** : Flink crée une session indépendante par location — la fenêtre de la location 74 se ferme après 5 minutes sans activité à cette location spécifiquement. Résultat : sessions réalistes.
+**With `PARTITION BY PULocationID`**: Flink creates an independent session per location — the window for location 74 only closes after 5 minutes of inactivity at that specific location. This produces realistic session sizes.
 
 ```sql
 FROM TABLE(
@@ -247,13 +247,13 @@ LIMIT 3;
            74 |        71
 ```
 
-**Réponse : 81** ✅
+**Answer: 81** ✅
 
-### Q6 — Tumbling Window 1h — Total Tips
+### Q6 — Tumbling window (1 hour) — Total tips
 
-Job : `src/job/hw/job_q6_tumbling_tips.py`
+Job: `src/job/hw/job_q6_tumbling_tips.py`
 
-Fenêtre d'1 heure, somme des `tip_amount` sur toutes les locations.
+1-hour tumbling window summing `tip_amount` across all locations.
 
 ```bash
 docker exec -it workshop-jobmanager-1 flink run -py /opt/src/job/hw/job_q6_tumbling_tips.py
@@ -267,36 +267,45 @@ LIMIT 3;
 ```
 
 ```
-    window_start     |     total_tip
----------------------+--------------------
- 2025-10-16 18:00:00 |  510.86
- 2025-10-30 16:00:00 |  494.41
- 2025-10-09 18:00:00 |  472.01
+    window_start     | total_tip
+---------------------+-----------
+ 2025-10-16 18:00:00 |    510.86
+ 2025-10-30 16:00:00 |    494.41
+ 2025-10-09 18:00:00 |    472.01
 ```
 
-**Réponse : 2025-10-16 18:00:00** ✅
+**Answer: 2025-10-16 18:00:00** ✅
 
 ---
 
-## Résumé des réponses
+## Answers Summary
 
-| # | Question | Réponse |
-|---|----------|---------|
+| # | Question | Answer |
+|---|----------|--------|
 | 1 | Redpanda version | **v25.3.9** |
-| 2 | Temps d'envoi des données | **10 seconds** |
-| 3 | Trips avec distance > 5km | **8506** |
-| 4 | PULocationID le plus fréquent (tumbling 5min) | **74** |
-| 5 | Trips dans la plus longue session | **81** |
-| 6 | Heure avec le plus de tips | **2025-10-16 18:00:00** |
+| 2 | Time to send data | **10 seconds** |
+| 3 | Trips with distance > 5km | **8506** |
+| 4 | Top PULocationID in 5-min tumbling window | **74** |
+| 5 | Trips in longest session | **81** |
+| 6 | Hour with highest total tips | **2025-10-16 18:00:00** |
+
+---
 
 ## Troubleshooting
 
-**TaskManager down** : Le taskmanager peut crasher si trop de jobs échouent en boucle (OOM). Solution :
+**TaskManager crashes**: The task manager can crash if too many jobs fail in a restart loop (OOM). Full restart:
 ```bash
 docker compose down
 docker compose up -d
 ```
 
-**Topic introuvable après restart** : `docker compose down` supprime les volumes. Recréer le topic et renvoyer les données.
+**Topic lost after restart**: `docker compose down` removes volumes. Recreate the topic and resend data after restarting.
 
-**NaN dans JSON** : Toujours ajouter `df = df.where(pd.notnull(df), None)` dans le producer ET `'json.ignore-parse-errors' = 'true'` dans le DDL source Flink.
+**NaN in JSON**: Always add `df = df.where(pd.notnull(df), None)` in the producer AND `'json.ignore-parse-errors' = 'true'` in the Flink source DDL.
+
+**Topic not deleted immediately**: Redpanda's delete is asynchronous. Add a short sleep between delete and create:
+```bash
+docker exec -it workshop-redpanda-1 rpk topic delete green-trips
+sleep 3
+docker exec -it workshop-redpanda-1 rpk topic create green-trips
+```

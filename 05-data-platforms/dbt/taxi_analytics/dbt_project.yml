@@ -1,0 +1,57 @@
+# ============================================
+# dbt Project Configuration
+# ============================================
+# NYC Taxi Analytics - Data Engineering Zoomcamp 2026
+
+name: 'taxi_analytics'
+version: '1.0.0'
+config-version: 2
+
+# Project profile (connects to BigQuery)
+profile: 'taxi_analytics'
+
+# Model paths
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+# Output directory
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Model configuration
+models:
+  taxi_analytics:
+    # Staging models (raw → cleaned)
+    staging:
+      +materialized: view
+      +schema: staging
+      
+    # Core models (business logic)
+    core:
+      +materialized: table
+      +schema: analytics
+      
+# Seeds configuration
+seeds:
+  taxi_analytics:
+    +schema: raw_data
+
+# Snapshots configuration  
+snapshots:
+  taxi_analytics:
+    +target_schema: snapshots
+
+# Documentation
+docs-paths: ["docs"]
+
+# Vars (can be overridden at runtime)
+vars:
+  # Date range for incremental models
+  start_date: '2019-01-01'
+  end_date: '2020-12-31'

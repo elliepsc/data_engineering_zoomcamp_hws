@@ -1,0 +1,32 @@
+# ============================================
+# dbt Profiles - BigQuery Connection
+# ============================================
+# Connection configuration for NYC Taxi Analytics
+
+taxi_analytics:
+  target: dev
+  outputs:
+
+    # Development target (local)
+    dev:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('GCP_PROJECT_ID') }}"
+      dataset: staging  # Default dataset
+      threads: 4
+      timeout_seconds: 300
+      location: EU
+      priority: interactive
+      # keyfile: "{{ env_var('GCP_CREDENTIALS_PATH', '/opt/airflow/config/gcp-credentials.json') }}"
+
+    # Production target (for Airflow DAGs)
+    prod:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('GCP_PROJECT_ID') }}"
+      dataset: analytics
+      threads: 8
+      timeout_seconds: 600
+      location: EU
+      priority: interactive
+      # keyfile: "{{ env_var('GCP_CREDENTIALS_PATH', '/opt/airflow/config/gcp-credentials.json') }}"

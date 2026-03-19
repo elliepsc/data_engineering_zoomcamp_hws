@@ -6,44 +6,47 @@ version: '3.8'
 # This setup provides:
 # - Airflow with LocalExecutor (lightweight, suitable for development)
 # - PostgreSQL backend (production-ready vs SQLite)
-# - Automatic credential mounting for GCP
+# - Automatic credential mounting for GCP (gcloud auth)
 # - Health checks for all services
 
 x-airflow-common: &airflow-common
   image: apache/airflow:2.8.1-python3.11
   environment:
+    &airflow-common-env
     # Core configuration
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
-    
+
     # Logging
     AIRFLOW__LOGGING__LOGGING_LEVEL: ${LOG_LEVEL:-INFO}
-    
-    # GCP Integration
-    GOOGLE_APPLICATION_CREDENTIALS: /opt/airflow/config/gcp-credentials.json
+
+    # GCP Integration (uses gcloud auth via mounted volume)
+    GOOGLE_CLOUD_PROJECT: ${GCP_PROJECT_ID}
     GCP_PROJECT_ID: ${GCP_PROJECT_ID}
     GCS_BUCKET_NAME: ${GCS_BUCKET_NAME}
-    
+
     # BigQuery datasets
     BQ_DATASET_RAW: ${BQ_DATASET_RAW:-raw_data}
     BQ_DATASET_STAGING: ${BQ_DATASET_STAGING:-staging}
     BQ_DATASET_ANALYTICS: ${BQ_DATASET_ANALYTICS:-analytics}
-    
+
     # Data configuration
     DATA_START_DATE: ${DATA_START_DATE:-2019-01-01}
     DATA_END_DATE: ${DATA_END_DATE:-2020-12-31}
     TAXI_TYPE: ${TAXI_TYPE:-green}
-    
+
   volumes:
-    - ./airflow/dags:/opt/airflow/dags
-    - ./airflow/plugins:/opt/airflow/plugins
-    - ./airflow/config:/opt/airflow/config
-    - ./airflow/utils:/opt/airflow/utils
-    - ./dbt:/opt/airflow/dbt
-    - ./airflow/logs:/opt/airflow/logs
+    - ${AIRFLOW_PROJ_DIR:-.}/airflow/dags:/opt/airflow/dags
+    - ${AIRFLOW_PROJ_DIR:-.}/airflow/logs:/opt/airflow/logs
+    - ${AIRFLOW_PROJ_DIR:-.}/airflow/config:/opt/airflow/config
+    - ${AIRFLOW_PROJ_DIR:-.}/airflow/plugins:/opt/airflow/plugins
+    - ${AIRFLOW_PROJ_DIR:-.}/airflow/utils:/opt/airflow/utils
+    - ${AIRFLOW_PROJ_DIR:-.}/dbt:/opt/airflow/dbt
+    # ✅ Mount entire gcloud directory to allow credential file creation
+    - /home/ellie/.config/gcloud:/home/airflow/.config/gcloud:ro
   depends_on:
     postgres:
       condition: service_healthy
@@ -71,7 +74,6 @@ services:
   # ============================================
   # Airflow Initialization
   # ============================================
-  # Runs once to initialize database and create admin user
   airflow-init:
     <<: *airflow-common
     container_name: airflow-init
@@ -93,13 +95,13 @@ services:
   # ============================================
   # Airflow Webserver
   # ============================================
-  # Access UI at http://localhost:8080
+  # Access UI at http://localhost:8082
   airflow-webserver:
     <<: *airflow-common
     container_name: airflow-webserver
     command: webserver
     ports:
-      - "8080:8080"
+      - "8082:8080"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
       interval: 30s
@@ -114,7 +116,6 @@ services:
   # ============================================
   # Airflow Scheduler
   # ============================================
-  # Orchestrates DAG execution
   airflow-scheduler:
     <<: *airflow-common
     container_name: airflow-scheduler

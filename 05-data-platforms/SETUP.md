@@ -215,7 +215,7 @@ docker compose ps
 
 ### 5.1 Open Browser
 
-Navigate to: **http://localhost:8080**
+Navigate to: **http://localhost:8082**
 
 ### 5.2 Login
 

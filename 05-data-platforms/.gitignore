@@ -63,6 +63,12 @@ Thumbs.db
 tmp/
 temp/
 *.tmp
-*FR.md
+
+# Personal files
+.venv/
+GUIDE_FR.md
 HOMEWORK_ANSWERS.md
 PROJECT_SUMMARY.md
+SETUP_FR.md
+*backup*
+

@@ -1,315 +1,411 @@
-# Airflow Data Platform - NYC Taxi Analytics
+# 🚕 Module 5: NYC Taxi Data Platform
 
-Warning: I do not follow instructions from the zoomcamp.: I do not use Bruin.
-I work on data platform mixing ETL(dbt) & airflow
-
-> **Production-ready data platform demonstrating modern data engineering patterns with Apache Airflow, dbt, and BigQuery.**
-
-Built for the [DataTalks.Club Data Engineering Zoomcamp 2026](https://github.com/DataTalksClub/data-engineering-zoomcamp) - Module 5: Data Platforms
-
-[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
-[![Airflow 2.8.1](https://img.shields.io/badge/airflow-2.8.1-orange.svg)](https://airflow.apache.org/)
-[![dbt](https://img.shields.io/badge/dbt-1.7+-green.svg)](https://www.getdbt.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+**Project**: Production-grade data pipeline for NYC Taxi data analysis
+**Author**: Ellie - Data Engineering Zoomcamp 2026
+**Stack**: Airflow + dbt + BigQuery + GCS
 
 ---
 
 ## 📋 Table of Contents
 
-- [Homework Answers](#homework-answers) 📝
-- [Architecture Overview](#architecture-overview)
-- [Why This Architecture?](#why-this-architecture)
-- [Production-Ready Patterns](#production-ready-patterns) ⭐
-- [Project Structure](#project-structure)
+- [Overview](#overview)
+- [Architecture](#architecture)
 - [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-- [Pipeline Details](#pipeline-details)
-- [Key Learnings](#key-learnings)
-- [Next Steps](#next-steps)
+- [Setup Guide](#setup-guide)
+- [Running the Pipeline](#running-the-pipeline)
+- [DAGs Description](#dags-description)
+- [Troubleshooting](#troubleshooting)
+- [Project Structure](#project-structure)
 
 ---
 
-## 📝 Homework Answers
+## 🎯 Overview
 
-**Module 5 was designed for Bruin**, but this project implements the **same data platform concepts** using **Airflow + dbt + BigQuery**.
+This project implements a complete **ELT pipeline** for NYC Taxi data:
 
-**See [HOMEWORK_ANSWERS.md](HOMEWORK_ANSWERS.md)** for detailed mapping of:
-- Question 1: Pipeline Structure → Airflow project structure
-- Question 2: Materialization → Incremental loading with BigQuery partitions
-- Question 3: Variables → Environment variables & Airflow Variables
-- Question 4: Dependencies → ExternalTaskSensor & DAG triggers
-- Question 5: Quality Checks → DataQualityOperator & dbt tests
-- Question 6: Lineage → Airflow Graph View & dbt docs
-- Question 7: First-Time Run → CREATE_IF_NEEDED disposition
+1. **Extract & Load**: Download Parquet files from NYC TLC → Upload to GCS → Load to BigQuery
+2. **Transform**: dbt models for data transformation (bronze → silver → gold)
+3. **Quality**: Automated data quality checks
 
-**Why Airflow instead of Bruin?**
-- 70% of data engineering jobs require Airflow (<1% mention Bruin)
-- Production-proven at Airbnb, Reddit, Lyft, etc.
-- Better for portfolio and employability
+**Key Features**:
+- ✅ Incremental backfill (2019-2020 data)
+- ✅ Partitioned & clustered BigQuery tables
+- ✅ Modular Python code with custom operators
+- ✅ Production-ready logging & monitoring
+- ✅ No JSON credentials (uses gcloud auth)
 
 ---
 
-## 🏗️ Architecture Overview
-
-This data platform orchestrates a complete **Extract-Load-Transform (ELT)** pipeline for NYC Taxi data:
+## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                      DATA SOURCE                                │
-│  NYC TLC Taxi Trip Records (Parquet files)                      │
-│  https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page  │
-└────────────────────────┬────────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│               AIRFLOW ORCHESTRATION LAYER                       │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  DAG 1: Incremental Data Ingestion                       │  │
-│  │  ├── Download monthly Parquet files (2019-2020)          │  │
-│  │  ├── Upload to Google Cloud Storage                      │  │
-│  │  └── Load to BigQuery (partitioned + clustered)          │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                         │                                       │
-│                         ▼                                       │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  DAG 2: dbt Transformations                              │  │
-│  │  ├── Wait for ingestion (ExternalTaskSensor)             │  │
-│  │  ├── Run staging models (cleaning, deduplication)        │  │
-│  │  ├── Run core models (business logic, aggregations)      │  │
-│  │  └── Execute dbt tests                                   │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                         │                                       │
-│                         ▼                                       │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  DAG 3: Data Quality Monitoring                          │  │
-│  │  ├── Check data freshness                                │  │
-│  │  ├── Validate NULL constraints                           │  │
-│  │  ├── Verify value ranges (trip distance, fares)          │  │
-│  │  └── Monitor anomalies                                   │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   DATA WAREHOUSE                                │
-│  Google BigQuery                                                │
-│  ├── raw_data: Raw ingested data                               │
-│  ├── staging: Cleaned and standardized                         │
-│  └── analytics: Business-ready aggregations                    │
-└─────────────────────────────────────────────────────────────────┘
+NYC TLC API
+    ↓ (monthly Parquet files)
+Airflow DAG 1: Ingestion
+    ↓
+Google Cloud Storage (raw/)
+    ↓
+BigQuery (raw_data.green_taxi)
+    ↓
+Airflow DAG 2: dbt Transformation
+    ↓
+BigQuery (staging.*, analytics.*)
+    ↓
+Airflow DAG 3: Quality Monitoring
+    ↓
+Quality Reports
 ```
 
 ---
 
-## 🎯 Why This Architecture?
+## 📦 Prerequisites
 
-### Airflow as Orchestrator
+### Required Tools
 
-- **Industry Standard**: 70%+ of data engineering job postings require Airflow
-- **Python-First**: Flexible, testable, and familiar to data engineers
-- **Rich Ecosystem**: 500+ pre-built operators and integrations
-- **Production-Proven**: Used by Airbnb, Reddit, Lyft, and thousands of companies
+- **Docker** & Docker Compose
+- **Python 3.11+** with venv
+- **gcloud CLI** (Google Cloud SDK)
+- **Git**
 
-### BigQuery as Data Warehouse
+### GCP Resources
 
-- **Serverless**: No infrastructure management
-- **Performance**: Petabyte-scale analytics with columnar storage
-- **Cost-Effective**: Pay only for queries and storage used
-- **Integration**: Native support in Airflow and dbt
-
-### dbt for Transformations
-
-- **SQL-Based**: Familiar to analysts and data engineers
-- **Version Control**: Models as code with Git
-- **Testing**: Built-in data quality framework
-- **Documentation**: Auto-generated lineage and docs
+- GCP Project with billing enabled
+- BigQuery API enabled
+- Cloud Storage API enabled
+- Service Account with roles:
+  - BigQuery Data Editor
+  - BigQuery Job User
+  - Storage Object Admin
 
 ---
 
-## ⭐ Production-Ready Patterns
+## 🚀 Setup Guide
 
-This project goes beyond "homework code" to demonstrate **professional data engineering practices** that you'll use in production environments.
+### 1. Clone the Repository
 
-### 1. Custom Operators (`plugins/`)
-
-**Problem**: Repeating the same logic across multiple DAGs leads to code duplication and maintenance nightmares.
-
-**Solution**: Create reusable Airflow operators that encapsulate common patterns.
-
-#### Example: DataQualityOperator
-
-Instead of writing 50 lines of BigQuery validation code in each DAG:
-
-```python
-# ❌ BAD: Repeated in every DAG
-def check_data_quality(**context):
-    from google.cloud import bigquery
-    client = bigquery.Client()
-    query = "SELECT COUNT(*) FROM table WHERE column IS NULL"
-    result = client.query(query).result()
-    # ... 40 more lines of validation logic ...
+```bash
+git clone <your-repo>
+cd 05-data-platforms
 ```
-
-Use a custom operator once:
-
-```python
-# ✅ GOOD: Reusable across all DAGs
-from operators.data_quality_operator import DataQualityOperator
-
-check_nulls = DataQualityOperator(
-    task_id='check_no_nulls',
-    table_id='raw_data.green_taxi',
-    check_type='null_check',
-    column='lpep_pickup_datetime',
-)
-```
-
-**Benefits**:
-- **DRY Principle**: Write once, use everywhere
-- **Testability**: Unit test the operator independently
-- **Maintainability**: Fix bugs in one place
-- **Professionalism**: Shows you understand software engineering
-
-**Location**: `airflow/plugins/operators/data_quality_operator.py`
 
 ---
 
-### 2. Centralized Configuration (`config/`)
+### 2. GCP Authentication Setup (NO JSON KEYS!)
 
-**Problem**: Hardcoded values scattered across DAGs make it impossible to switch environments or update credentials.
+**This project uses gcloud auth instead of service account JSON keys.**
 
-**Solution**: Single source of truth for all configuration via environment variables and config loaders.
+```bash
+# Step 1: Install gcloud CLI (if not already installed)
+curl https://sdk.cloud.google.com | bash
+exec -l $SHELL
 
-#### Example: Config Loader
+# Step 2: Login with your Google account
+gcloud auth login
 
-Instead of hardcoding project IDs in every DAG:
+# Step 3: Set your GCP project
+gcloud config set project YOUR-PROJECT-ID
 
-```python
-# ❌ BAD: Hardcoded everywhere
-PROJECT_ID = "my-project-123"
-DATASET = "raw_data"
-BUCKET = "gs://my-bucket"
+# Step 4: Create Application Default Credentials
+gcloud auth application-default login
+
+# Step 5: Verify it works
+bq ls  # Should list datasets (empty at first)
 ```
 
-Load from centralized config:
-
-```python
-# ✅ GOOD: Load from environment
-from utils.config_loader import get_gcp_config, get_bigquery_config
-
-gcp_config = get_gcp_config()
-bq_config = get_bigquery_config()
-
-PROJECT_ID = gcp_config['project_id']
-DATASET = bq_config['dataset_raw']
-```
-
-**Benefits**:
-- **Environment Switching**: Change `.env` file to switch dev/staging/prod
-- **Security**: No credentials in code (Git safe)
-- **Maintainability**: Update config in one place
-- **12-Factor App**: Follows industry best practices
-
-**Location**: `airflow/utils/config_loader.py`
+**Why no JSON keys?**
+- ✅ More secure (no credentials file to leak)
+- ✅ Easier to manage
+- ✅ Production-ready pattern
+- ✅ Works in Docker via volume mount
 
 ---
 
-### 3. Reusable Utilities (`utils/`)
+### 3. Create GCP Resources
 
-**Problem**: Common operations (GCS uploads, BigQuery queries, logging) are reimplemented in every DAG.
+```bash
+# Create GCS bucket
+gcloud storage buckets create gs://YOUR-PROJECT-ID-data \
+  --project=YOUR-PROJECT-ID \
+  --location=europe-west1
 
-**Solution**: Helper functions with error handling, retries, and structured logging.
-
-#### Example: Structured Logging
-
-Instead of basic print statements:
-
-```python
-# ❌ BAD: Unparseable logs
-print("Starting upload")
-print(f"File size: {size}")
+# Create BigQuery datasets
+bq mk --dataset --location=EU --project_id=YOUR-PROJECT-ID raw_data
+bq mk --dataset --location=EU --project_id=YOUR-PROJECT-ID staging
+bq mk --dataset --location=EU --project_id=YOUR-PROJECT-ID analytics
 ```
-
-Use structured JSON logging:
-
-```python
-# ✅ GOOD: Machine-parseable logs
-from utils.logger import get_logger
-
-logger = get_logger(__name__)
-logger.info(
-    "Starting upload",
-    extra={'file_path': '/tmp/data.parquet', 'size_mb': 15.3}
-)
-```
-
-**Output**:
-```json
-{
-  "timestamp": "2026-02-10 14:23:45",
-  "level": "INFO",
-  "logger": "dags.01_ingest",
-  "message": "Starting upload",
-  "file_path": "/tmp/data.parquet",
-  "size_mb": 15.3
-}
-```
-
-**Benefits**:
-- **Observability**: Easy parsing by Datadog, CloudWatch, ELK
-- **Debugging**: Contextual information in every log
-- **Professionalism**: Production-grade logging
-
-#### Example: GCP Helpers
-
-Instead of reimplementing GCS upload logic:
-
-```python
-# ❌ BAD: Repeated in every DAG
-from google.cloud import storage
-client = storage.Client()
-bucket = client.bucket('my-bucket')
-blob = bucket.blob('path/to/file')
-blob.upload_from_filename('/tmp/data.parquet')
-# ... no retry logic, no error handling ...
-```
-
-Use helper with automatic retries:
-
-```python
-# ✅ GOOD: Reusable with built-in retry
-from utils.gcp_helpers import upload_to_gcs
-
-upload_to_gcs(
-    local_path='/tmp/data.parquet',
-    bucket_name='my-bucket',
-    blob_name='raw/green_taxi/2019-01/data.parquet'
-)
-# Automatically retries on transient failures
-```
-
-**Location**: `airflow/utils/gcp_helpers.py`, `airflow/utils/logger.py`
 
 ---
 
-### Summary: Code Quality Comparison
+### 4. Configure Environment
 
-| Aspect | Without Patterns | With Production Patterns |
-|--------|------------------|--------------------------|
-| **Lines per DAG** | 500+ lines | 100-150 lines |
-| **Code Duplication** | High (copy-paste) | Minimal (DRY) |
-| **Testability** | Hard to test | Unit testable |
-| **Maintainability** | Update 10 files | Update 1 file |
-| **Debugging** | Print statements | Structured logs |
-| **Professionalism** | Bootcamp student | Senior engineer |
+```bash
+# Copy example env file
+cp .env.example .env
 
-**What Recruiters See**:
+# Edit .env with your project details
+nano .env
+```
 
-❌ **Without patterns**: "This person copies from tutorials"
-✅ **With patterns**: "This person writes production code"
+**Required variables**:
+```bash
+GCP_PROJECT_ID=your-project-id
+GCP_REGION=europe-west1
+GCS_BUCKET_NAME=your-project-id-data
+
+BQ_DATASET_RAW=raw_data
+BQ_DATASET_STAGING=staging
+BQ_DATASET_ANALYTICS=analytics
+
+DATA_START_DATE=2019-01-01
+DATA_END_DATE=2020-12-31
+TAXI_TYPE=green
+```
+
+**Note**: NO `GOOGLE_APPLICATION_CREDENTIALS` needed!
+
+---
+
+### 5. Setup Python Virtual Environment (Optional)
+
+For local development and IDE autocomplete:
+
+```bash
+# Create venv
+make venv
+
+# Activate
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements-dev.txt
+```
+
+---
+
+### 6. Configure dbt
+
+```bash
+# Edit dbt profiles
+nano dbt/taxi_analytics/profiles.yml
+```
+
+**Correct configuration (uses oauth)**:
+```yaml
+taxi_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth  # ← Uses gcloud auth
+      project: YOUR-PROJECT-ID
+      dataset: staging
+      threads: 4
+      location: EU
+      # NO keyfile parameter!
+```
+
+---
+
+### 7. Start Airflow
+
+```bash
+# Start all services
+make start
+
+# The Makefile automatically:
+# 1. Checks .env configuration
+# 2. Sets gcloud credentials permissions (chmod 644)
+# 3. Starts Docker containers
+```
+
+**Access Airflow UI**: http://localhost:8082
+- Username: `admin`
+- Password: `admin` (or check `.env`)
+
+---
+
+## 🎮 Running the Pipeline
+
+### Enable DAGs
+
+1. Go to http://localhost:8082
+2. Toggle ON the following DAGs:
+   - `01_ingest_nyc_taxi_incremental`
+   - `02_transform_dbt_models`
+   - `03_quality_monitoring`
+
+### Monitor Execution
+
+The pipeline will automatically:
+1. **Backfill** all months from 2019-01 to 2020-12
+2. Run **3 concurrent** monthly ingestions
+3. Transform data with dbt after ingestion completes
+4. Run quality checks
+
+**Grid View** shows execution timeline.
+
+---
+
+## 📊 DAGs Description
+
+### DAG 1: `01_ingest_nyc_taxi_incremental`
+
+**Purpose**: Incremental data ingestion
+
+**Tasks**:
+1. `download_data`: Download monthly Parquet from NYC TLC
+2. `get_gcs_destination`: Generate GCS path
+3. `upload_to_gcs`: Upload to Cloud Storage
+4. `load_to_bigquery`: Load to BigQuery (partitioned + clustered)
+5. `cleanup_local_file`: Remove temporary files
+
+**Schedule**: `@monthly`
+**Catchup**: `True` (enables backfill)
+**Max Active Runs**: 3
+
+---
+
+### DAG 2: `02_transform_dbt_models`
+
+**Purpose**: Data transformation with dbt
+
+**Tasks**:
+1. `wait_for_ingestion`: Wait for DAG 1 to complete
+2. `dbt_deps`: Install dbt dependencies
+3. `dbt_run_staging`: Transform staging models
+4. `dbt_test_staging`: Test staging models
+5. `dbt_run_core`: Transform core analytics models
+6. `dbt_test_core`: Test core models
+7. `dbt_docs_generate`: Generate documentation
+
+**Schedule**: `@monthly`
+**Depends on**: DAG 1 completion
+
+---
+
+### DAG 3: `03_quality_monitoring`
+
+**Purpose**: Data quality monitoring
+
+**Tasks**:
+1. `wait_for_ingestion`: Wait for DAG 1
+2. `check_data_freshness`: Verify recent data
+3. `check_no_null_pickup_datetime`: Null checks
+4. `check_trip_distances`: Distance validation
+5. `check_passenger_count`: Passenger validation
+6. `check_fare_amounts`: Fare validation
+7. `check_location_ids`: Location validation
+8. `log_quality_summary`: Summary report
+
+**Schedule**: `@monthly`
+
+---
+
+## 🛠️ Troubleshooting
+
+### Common Issues
+
+#### 1. **Credentials Not Found**
+
+```
+Error: CLOUD_SDK_MISSING_CREDENTIALS
+```
+
+**Solution**:
+```bash
+gcloud auth application-default login
+make restart  # Restart Airflow
+```
+
+---
+
+#### 2. **Bucket Does Not Exist**
+
+```
+Error: 404 The specified bucket does not exist
+```
+
+**Solution**:
+```bash
+gcloud storage buckets create gs://YOUR-PROJECT-ID-data \
+  --project=YOUR-PROJECT-ID \
+  --location=europe-west1
+```
+
+---
+
+#### 3. **Dataset Not Found**
+
+```
+Error: 404 Not found: Dataset raw_data
+```
+
+**Solution**:
+```bash
+bq mk --dataset --location=EU --project_id=YOUR-PROJECT-ID raw_data
+bq mk --dataset --location=EU --project_id=YOUR-PROJECT-ID staging
+bq mk --dataset --location=EU --project_id=YOUR-PROJECT-ID analytics
+```
+
+---
+
+#### 4. **Schema Mismatch Error**
+
+```
+Error: Field ehail_fee has changed type from FLOAT to INTEGER
+```
+
+**Solution**:
+```bash
+# Delete and recreate table
+bq rm -f -t YOUR-PROJECT-ID:raw_data.green_taxi
+
+# Clear failed tasks in Airflow UI
+# Tasks will retry and recreate table with correct schema
+```
+
+---
+
+#### 5. **Permission Denied in Docker**
+
+```
+Error: Permission denied: '/home/airflow/.config/gcloud/...'
+```
+
+**Solution**:
+```bash
+chmod 644 ~/.config/gcloud/application_default_credentials.json
+make restart
+```
+
+The `make start` command now does this automatically!
+
+---
+
+### Useful Commands
+
+```bash
+# View logs
+make logs
+
+# Stop Airflow
+make stop
+
+# Restart Airflow
+make restart
+
+# Clean up (stop + remove containers)
+make clean
+
+# Complete cleanup (including volumes)
+make clean-all
+
+# Shell into scheduler
+make shell-scheduler
+
+# Shell into webserver
+make shell-webserver
+```
 
 ---
 
@@ -317,241 +413,79 @@ upload_to_gcs(
 
 ```
 05-data-platforms/
-├── README.md                      # This file
-├── SETUP.md                       # English setup guide
-├── SETUP_FR.md                    # French setup guide
-├── GUIDE_FR.md                    # French step-by-step tutorial
-├── .env.example                   # Environment variables template
-├── .gitignore
-├── docker-compose.yml             # Airflow services
-├── requirements.txt               # Python dependencies
-│
 ├── airflow/
 │   ├── dags/
-│   │   ├── 01_ingest_nyc_taxi.py          # Incremental data ingestion
-│   │   ├── 02_transform_dbt.py            # dbt orchestration
-│   │   └── 03_quality_monitoring.py       # Data quality checks
-│   │
+│   │   ├── 01_ingest_nyc_taxi.py       # Ingestion DAG
+│   │   ├── 02_transform_dbt.py         # Transformation DAG
+│   │   └── 03_quality_monitoring.py    # Quality DAG
 │   ├── plugins/
 │   │   └── operators/
-│   │       ├── __init__.py
-│   │       └── data_quality_operator.py   # Custom quality check operator
-│   │
-│   ├── config/
-│   │   ├── airflow.cfg                    # Airflow configuration
-│   │   └── connections.json.example       # Connection templates
-│   │
-│   └── utils/
-│       ├── __init__.py
-│       ├── logger.py                      # Structured JSON logging
-│       ├── gcp_helpers.py                 # GCS/BigQuery utilities
-│       └── config_loader.py               # Centralized config
-│
+│   │       └── data_quality_operator.py # Custom operator
+│   ├── utils/
+│   │   ├── logger.py                    # Structured logging
+│   │   ├── config_loader.py             # Config management
+│   │   └── gcp_helpers.py               # GCP utilities
+│   └── config/
+│       └── logging.json                 # Logging config
 ├── dbt/
-│   └── taxi_analytics/                    # dbt project (from Module 4)
-│
-├── tests/
-│   ├── test_dag_integrity.py              # DAG validation tests
-│   └── test_data_quality.py               # Quality operator tests
-│
-└── docs/
-    ├── architecture.md                    # Detailed architecture
-    ├── patterns.md                        # Pattern explanations
-    └── diagrams/
-        └── pipeline-flow.png              # Visual diagrams
+│   └── taxi_analytics/
+│       ├── models/
+│       │   ├── staging/                 # Staging models
+│       │   └── core/                    # Core analytics
+│       ├── tests/                       # dbt tests
+│       └── profiles.yml                 # dbt connection config
+├── docker-compose.yml                   # Airflow services
+├── Makefile                             # Automation commands
+├── requirements.txt                     # Python dependencies (Docker)
+├── requirements-dev.txt                 # Dev dependencies (venv)
+├── .env                                 # Environment variables
+└── README.md                            # This file
 ```
 
 ---
 
-## 🔧 Prerequisites
+## 🎓 Learning Outcomes
 
-- **Google Cloud Platform Account** with billing enabled
-- **Docker** and **Docker Compose** installed
-- **dbt project** from Module 4 (or use the included template)
-- **Basic knowledge** of SQL, Python, and command line
+This project demonstrates:
 
----
-
-## 🚀 Quick Start
-
-### 1. Clone Repository
-
-```bash
-git clone <your-repo-url>
-cd 05-data-platforms
-```
-
-### 2. Configure Environment
-
-```bash
-# Copy environment template
-cp .env.example .env
-
-# Edit .env with your values
-nano .env
-```
-
-Required variables:
-- `GCP_PROJECT_ID`: Your GCP project ID
-- `GCS_BUCKET_NAME`: GCS bucket name (will be created)
-- `GCP_CREDENTIALS_PATH`: Path to service account key
-
-### 3. Add GCP Credentials
-
-```bash
-# Download service account key from GCP Console
-# Place it in the config directory
-cp ~/Downloads/gcp-key.json airflow/config/gcp-credentials.json
-```
-
-### 4. Start Airflow
-
-```bash
-# Start all services
-docker compose up -d
-
-# Check logs
-docker compose logs -f airflow-scheduler
-```
-
-### 5. Access Airflow UI
-
-Open http://localhost:8080
-
-- **Username**: `admin` (or from `.env`)
-- **Password**: `admin` (or from `.env`)
-
-### 6. Trigger Backfill
-
-```bash
-# Trigger ingestion for 2019
-docker exec -it airflow-scheduler \
-  airflow dags backfill 01_ingest_nyc_taxi_incremental \
-  --start-date 2019-01-01 \
-  --end-date 2019-12-31
-```
-
-**For detailed setup instructions**, see [SETUP.md](SETUP.md) (English) or [SETUP_FR.md](SETUP_FR.md) (French).
-
----
-
-## 📊 Pipeline Details
-
-### DAG 1: Incremental Data Ingestion
-
-**Schedule**: Monthly (`@monthly`)
-**Catchup**: Enabled (supports backfill)
-
-**Tasks**:
-1. **Download Data**: Fetch Parquet file from NYC TLC
-2. **Get GCS Destination**: Generate organized path
-3. **Upload to GCS**: Store in `raw/green_taxi/YYYY-MM/`
-4. **Load to BigQuery**: Partitioned table by `lpep_pickup_datetime`
-5. **Cleanup**: Remove temporary local file
-
-**Key Features**:
-- Incremental loading based on `execution_date`
-- Idempotent (re-run safe)
-- Partitioned and clustered BigQuery tables
-- Automatic retry with exponential backoff
-
-### DAG 2: dbt Transformations
-
-**Schedule**: Monthly (matches ingestion)
-**Dependencies**: Waits for DAG 1 via `ExternalTaskSensor`
-
-**Tasks**:
-1. **Wait for Ingestion**: Ensure data is loaded
-2. **Install Dependencies**: `dbt deps`
-3. **Run Staging Models**: Basic cleaning
-4. **Test Staging**: Validate staging layer
-5. **Run Core Models**: Business logic
-6. **Test Core**: Final validation
-7. **Generate Docs**: dbt documentation
-
-**Key Features**:
-- Layered transformation (staging → core)
-- Test-driven development
-- Cross-DAG dependencies
-
-### DAG 3: Data Quality Monitoring
-
-**Schedule**: Monthly
-**Dependencies**: Waits for DAG 1
-
-**Checks**:
-1. **Freshness**: Data loaded for expected month
-2. **Completeness**: No NULL pickup/dropoff times
-3. **Validity**: Reasonable trip distances (<200 miles)
-4. **Validity**: Positive passenger counts
-5. **Validity**: Reasonable fare amounts ($0-$1000)
-6. **Validity**: Valid location IDs
-
-**Key Features**:
-- Custom `DataQualityOperator`
-- Parallel execution of checks
-- Zero retries (fail fast)
-- Structured logging for monitoring
-
----
-
-## 💡 Key Learnings
-
-| Concept | Implementation | Why It Matters |
-|---------|---------------|----------------|
-| **Incremental Loading** | Date-based partitioning | Efficiency, idempotence |
-| **Cross-DAG Dependencies** | ExternalTaskSensor | Decoupling, scalability |
-| **Data Quality** | Automated checks | Trust, reliability |
-| **Custom Operators** | DataQualityOperator | Reusability, DRY |
-| **Structured Logging** | JSON format | Observability, debugging |
-| **Configuration Management** | Environment variables | Security, flexibility |
-
----
-
-## 🚀 Next Steps
-
-### Production Enhancements
-
-- [ ] **Deploy to Cloud Composer** (managed Airflow on GCP)
-- [ ] **Add Great Expectations** for advanced data quality
-- [ ] **Implement Alerting** (Slack, email, PagerDuty)
-- [ ] **Add More Data Sources** (e.g., IDFM API for Paris transport)
-- [ ] **CI/CD Pipeline** (GitHub Actions for DAG testing)
-- [ ] **Monitoring Dashboard** (Grafana + Prometheus)
-
-### Advanced Features
-
-- [ ] **SCD Type 2** with dbt snapshots
-- [ ] **Incremental dbt models** for performance
-- [ ] **Dynamic DAG generation** for multiple data sources
-- [ ] **Airflow Variables** and **Connections** UI
-- [ ] **Data lineage visualization** with OpenLineage
+✅ **Production-grade Airflow** setup
+✅ **Incremental data loading** with backfill
+✅ **BigQuery optimization** (partitioning & clustering)
+✅ **dbt best practices** (staging → core layers)
+✅ **Custom Airflow operators** for reusability
+✅ **Modern GCP authentication** (no JSON keys)
+✅ **Docker-based development** workflow
+✅ **Data quality monitoring** automation
 
 ---
 
 ## 📚 Resources
 
+- [NYC TLC Trip Record Data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
 - [Apache Airflow Documentation](https://airflow.apache.org/docs/)
 - [dbt Documentation](https://docs.getdbt.com/)
-- [Google Cloud Composer](https://cloud.google.com/composer)
-- [DataTalks.Club DE Zoomcamp](https://github.com/DataTalksClub/data-engineering-zoomcamp)
+- [BigQuery Documentation](https://cloud.google.com/bigquery/docs)
+- [Google Cloud Authentication](https://cloud.google.com/docs/authentication/application-default-credentials)
 
 ---
 
-## 📝 License
+## 🚀 Next Steps
 
-MIT License - see [LICENSE](LICENSE) file for details.
-
----
-
-## 👤 Author
-
-**Ellie** - Data Engineering Zoomcamp 2026
-
-- Portfolio: [Your Portfolio URL]
-- LinkedIn: [Your LinkedIn]
-- GitHub: [@YourGitHub](https://github.com/YourGitHub)
+1. **Add Great Expectations** for advanced data quality
+2. **Implement alerting** (Slack, email)
+3. **Add Terraform** for infrastructure as code
+4. **Deploy to Cloud Composer** (managed Airflow)
+5. **Add incremental dbt models**
+6. **Implement data lineage tracking**
 
 ---
 
-**⭐ If this project helped you, please give it a star!**
+## 📧 Contact
+
+**Ellie Pascaud**
+Data Engineering Zoomcamp 2026
+Transitioning from Financial Controller to Analytics Engineer
+
+---
+
+**⭐ If this helps you, please star the repository!**

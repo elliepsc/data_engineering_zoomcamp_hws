@@ -28,8 +28,8 @@ The project follows the Zoomcamp and is organized by module, covering the full d
 | **3** | Data Warehouse | ✅ Complete | Feb 2026 |
 | **4** | Analytics Engineering | ✅ Complete |  Feb 2026 |
 | **5** | Data Platforms |🔜 Started |  - |
-| **6** | Batch Processing | ✅ Complete |  Feb 2026 |
-| **7** | Streaming | ⏳ Not Started | - |
+| **6** | Batch Processing | ✅ Complete |  March 2026 |
+| **7** | Streaming | ✅ Complete |  March 2026 |
 | **7** | Workshop | ✅ Complete |  Feb 2026 |
 
 
